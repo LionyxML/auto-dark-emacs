@@ -1,6 +1,6 @@
 ;; -*- lexical-binding: t -*-
-;; Auto-Dark-Emacs is an auto changer between 2 themes, dark/light, respecting the
-;; overall settings of MacOS
+;; Auto-Dark-Emacs is an auto changer between 2 themes, dark/light,
+;; respecting the overall settings of MacOS
 (require 'timer)
 
 (defgroup auto-dark nil
