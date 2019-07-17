@@ -16,4 +16,4 @@ dark modes. They are provided under the =auto-dark= customization group.
 
 Watch with amazement as Emacs updates as you toggle the settings!
 
-[[./images/ade.gif][auto-dark-emacs in action]]
+[[/images/ade.gif][auto-dark-emacs in action]]
