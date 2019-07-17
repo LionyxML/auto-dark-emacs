@@ -1,0 +1,19 @@
+#+TITLE: Auto-Dark-Emacs
+
+Want Emacs to respect your MacOS dark mode settings? Well then this package is for you!
+
+* Install
+
+Add =auto-dark-emacs.el= to your =load-path= and =(require 'auto-dark)=.
+
+Or, you can copy the contents into your dotemacs.
+
+* Usage
+
+Customize the variables =auto-dark-dark-theme= and
+=auto-dark-light-theme= to decide which themes are used for light and
+dark modes. They are provided under the =auto-dark= customization group.
+
+Watch with amazement as Emacs updates as you toggle the settings!
+
+[[./images/ade.gif][auto-dark-emacs in action]]
