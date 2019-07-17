@@ -3,12 +3,16 @@
 ;; overall settings of MacOS
 (require 'timer)
 
+(defgroup auto-dark nil
+  "Customization of themes for `auto-dark-mode'")
 
 (defcustom auto-dark-dark-theme 'wombat
-  "Theme for the dark mode state of auto-dark-mode.")
+  "Theme for the dark mode state of auto-dark-mode."
+  :group 'auto-dark)
 
 (defcustom auto-dark-light-theme 'wombat
-  "Theme for the light mode state of auto-dark-mode.")
+  "Theme for the light mode state of auto-dark-mode."
+  :group 'auto-dark)
 
 (defvar auto-dark-state nil
   "The current state of auto-dark-mode.")
