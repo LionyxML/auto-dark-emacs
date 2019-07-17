@@ -44,7 +44,7 @@
                    'dark
                  'light)))
     (unless (eq state auto-dark-state)
-      (auto-dark-set-state))))
+      (auto-dark-set-state state))))
 
 
 (defvar auto-dark-timer nil
