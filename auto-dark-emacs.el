@@ -10,7 +10,7 @@
   "Theme for the dark mode state of auto-dark-mode."
   :group 'auto-dark)
 
-(defcustom auto-dark-light-theme 'wombat
+(defcustom auto-dark-light-theme 'leuven
   "Theme for the light mode state of auto-dark-mode."
   :group 'auto-dark)
 
