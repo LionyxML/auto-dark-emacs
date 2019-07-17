@@ -23,11 +23,11 @@
   (setf auto-dark-state state)
   (cond
    ((eq state 'dark)
-	(disable-theme auto-dark-light-theme)
-	(load-theme auto-dark-dark-theme))
+    (disable-theme auto-dark-light-theme)
+    (load-theme auto-dark-dark-theme))
    ((eq state 'light)
-	(disable-theme auto-dark-dark-theme)
-	(load-theme auto-dark-light-theme))))
+    (disable-theme auto-dark-dark-theme)
+    (load-theme auto-dark-light-theme))))
 
 
 (defun auto-dark-dark-p ()
@@ -37,10 +37,10 @@
 
 (defun auto-dark-update ()
   (let ((state (if (auto-dark-dark-p)
-				   'dark
-				 'light)))
-	(unless (eq state auto-dark-state)
-	  (auto-dark-set-state))))
+                   'dark
+                 'light)))
+    (unless (eq state auto-dark-state)
+      (auto-dark-set-state))))
 
 
 (defvar auto-dark-timer nil
