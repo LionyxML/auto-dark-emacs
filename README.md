@@ -1,7 +1,7 @@
 Auto-Dark-Emacs
 ---------------
 
-Wanna emacs to follow your MacOS Dark-mode on/off options?
+Want emacs to follow your MacOS Dark-mode on/off options?
 
 That's it. This program lets Emacs change between 2 user defined (in code) themes to be automatically changed when Dark Mode set on/off on MacOS.
 
