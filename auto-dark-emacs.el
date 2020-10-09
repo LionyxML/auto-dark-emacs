@@ -1,4 +1,4 @@
-;;; auto-dark-eamcs.el --- Automatically set the dark-mode state of Emacs
+;;; auto-dark-emacs.el --- Automatically set the dark-mode state of Emacs
 
 ;; Copyright (C) 2019 Rahul M. Juliato
 
