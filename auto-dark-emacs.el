@@ -27,12 +27,24 @@
 
 ;;; Code:
 
-(defcustom auto-dark-emacs/dark-theme 'wombat
-  "The theme to enable when dark-mode is active"
+(defun default-wombat-theme ()
+  (progn
+    (load-theme 'wombat t)
+    (disable-theme 'leuven))
+  )
+
+(defun default-leuven-theme ()
+  (progn
+    (load-theme 'leuven t)
+    (disable-theme 'wombat))
+  )
+
+(defcustom auto-dark-emacs/dark-theme-function 'default-wombat-theme
+  "Function to enable your dark theme of choice"
   :group 'auto-dark-emacs)
 
-(defcustom auto-dark-emacs/light-theme 'leuven
-  "The theme to enable when dark-mode is inactive"
+(defcustom auto-dark-emacs/light-theme-function 'default-leuven-theme
+  "Function to enable your light theme of choice"
   :group 'auto-dark-emacs)
 
 (defcustom auto-dark-emacs/polling-interval-seconds 5
@@ -51,13 +63,13 @@
   "Invoke applescript using Emacs built-in AppleScript support to see if dark mode is enabled. Returns true if it is."
 
   (string-equal "true" (ns-do-applescript "tell application \"System Events\"
-	tell appearance preferences
-		if (dark mode) then
-			return \"true\"
-		else
-			return \"false\"
-		end if
-	end tell
+        tell appearance preferences
+                if (dark mode) then
+                        return \"true\"
+                else
+                        return \"false\"
+                end if
+        end tell
 end tell")))
 
 (defun auto-dark-emacs/is-dark-mode-osascript ()
@@ -81,12 +93,8 @@ end tell")))
         (progn
           (setq auto-dark-emacs/last-dark-mode-state is-dark-mode)
           (if is-dark-mode
-              (progn
-                (load-theme auto-dark-emacs/dark-theme t)
-                (disable-theme auto-dark-emacs/light-theme))
-            (progn
-              (load-theme auto-dark-emacs/light-theme t)
-              (disable-theme auto-dark-emacs/dark-theme)))))))
+              (funcall auto-dark-emacs/dark-theme-function)
+            (funcall auto-dark-emacs/light-theme-function))))))
 
 (run-with-timer 0 auto-dark-emacs/polling-interval-seconds 'auto-dark-emacs/check-and-set-dark-mode)
 
