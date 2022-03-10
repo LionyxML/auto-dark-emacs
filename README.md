@@ -1,4 +1,4 @@
-## Auto-Dark-Emacs
+## Auto-Dark for Emacs
 
 Do you want Emacs to follow your MacOS Dark-mode on/off options?
 
