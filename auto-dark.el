@@ -23,12 +23,12 @@
 (defcustom auto-dark--dark-theme 'wombat
   "The theme to enable when dark-mode is active."
   :group 'auto-dark
-  :type 'string)
+  :type 'symbol)
 
 (defcustom auto-dark--light-theme 'leuven
   "The theme to enable when dark-mode is inactive."
   :group 'auto-dark
-  :type 'string)
+  :type 'symbol)
 
 (defcustom auto-dark--polling-interval-seconds 5
   "The number of seconds between which to poll for dark mode state.  Emacs must be restarted for this value to take effect."
