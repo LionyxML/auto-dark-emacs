@@ -20,6 +20,11 @@
 ;;     M-x customize-group auto-dark
 
 ;;; Code:
+(defgroup auto-dark nil
+  "Automatically changes emacs theme acording to MacOS dark-mode status."
+  :group 'tools
+  :prefix "auto-dark-*")
+
 (defcustom auto-dark--dark-theme 'wombat
   "The theme to enable when dark-mode is active."
   :group 'auto-dark
