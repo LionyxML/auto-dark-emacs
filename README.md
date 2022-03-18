@@ -1,4 +1,5 @@
 ## Auto-Dark for Emacs
+[![MELPA](https://melpa.org/packages/auto-dark-badge.svg)](https://melpa.org/#/auto-dark)
 
 Do you want Emacs to follow your MacOS Dark-mode on/off options?
 
@@ -7,8 +8,13 @@ This is it. This program lets Emacs change between 2 user defined (customizable)
 By default, themes are wombat and leuven, since these are bundled with Emacs.
 
 ## Install
+Install it from [MELPA](https://melpa.org/#/auto-dark) and add to your `.emacs` file:
+```
+(require 'auto-dark)
+```
 
-Simply copy the auto-dark.el file to `~/.emacs.d/auto-dark/auto-dark.el` (or clone this repository there), and then add the following to your `.emacs`:
+
+Or simply copy the auto-dark.el file to `~/.emacs.d/auto-dark/auto-dark.el` (or clone this repository there), and then add the following to your `.emacs`:
 
 ```
 (add-to-list 'load-path "~/.emacs.d/auto-dark/")
