@@ -7,7 +7,7 @@
 ;; Keywords: tools, unix, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
-;; SPDX-License-Identifier: GPL-2.0-only
+;; SPDX-License-Identifier: GPL-2.0-or-later
 
 ;;; Commentary:
 ;; Auto-Dark is an auto-changer between 2 themes, dark/light, respecting the
