@@ -65,6 +65,12 @@ end tell")))
 
   (string-equal "true" (string-trim (shell-command-to-string "osascript -e 'tell application \"System Events\" to tell appearance preferences to return dark mode'"))))
 
+(defvar auto-dark-dark-mode-hook nil
+  "List of hooks to run after dark mode is loaded." )
+
+(defvar auto-dark-light-mode-hook nil
+  "List of hooks to run after dark mode is loaded." )
+
 (defun auto-dark--is-dark-mode ()
   "If supported, invoke applescript using Emacs built-in AppleScript support to see if dark mode is enabled.  Otherwise, check dark-mode status using osascript, if allowed by auto-dark--allow-osascript."
 
@@ -83,10 +89,12 @@ end tell")))
           (if is-dark-mode
               (progn
                 (load-theme auto-dark--dark-theme t)
-                (disable-theme auto-dark--light-theme))
+                (disable-theme auto-dark--light-theme)
+                (run-hooks 'auto-dark-dark-mode-hook))
             (progn
               (load-theme auto-dark--light-theme t)
-              (disable-theme auto-dark--dark-theme)))))))
+              (disable-theme auto-dark--dark-theme)
+              (run-hooks 'auto-dark-light-mode-hook)))))))
 
 (run-with-timer 0 auto-dark--polling-interval-seconds 'auto-dark--check-and-set-dark-mode)
 
