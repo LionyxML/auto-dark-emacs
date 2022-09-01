@@ -3,7 +3,7 @@
 ;; Author: Rahul M. Juliato
 ;;         Tim Harper <timcharper at gmail dot com>
 ;; Created: July 16 2019
-;; Version: 0.3
+;; Version: 0.4
 ;; Keywords: tools, unix, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
@@ -69,7 +69,7 @@ end tell")))
   "List of hooks to run after dark mode is loaded." )
 
 (defvar auto-dark-light-mode-hook nil
-  "List of hooks to run after dark mode is loaded." )
+  "List of hooks to run after light mode is loaded." )
 
 (defun auto-dark--is-dark-mode ()
   "If supported, invoke applescript using Emacs built-in AppleScript support to see if dark mode is enabled.  Otherwise, check dark-mode status using osascript, if allowed by auto-dark--allow-osascript."
