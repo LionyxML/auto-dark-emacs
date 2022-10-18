@@ -88,12 +88,12 @@ end tell")))
           (setq auto-dark--last-dark-mode-state is-dark-mode)
           (if is-dark-mode
               (progn
-                (load-theme auto-dark--dark-theme t)
                 (disable-theme auto-dark--light-theme)
+                (load-theme auto-dark--dark-theme t)
                 (run-hooks 'auto-dark-dark-mode-hook))
             (progn
-              (load-theme auto-dark--light-theme t)
               (disable-theme auto-dark--dark-theme)
+              (load-theme auto-dark--light-theme t)
               (run-hooks 'auto-dark-light-mode-hook)))))))
 
 (run-with-timer 0 auto-dark--polling-interval-seconds 'auto-dark--check-and-set-dark-mode)
