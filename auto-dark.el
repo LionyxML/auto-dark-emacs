@@ -3,8 +3,8 @@
 ;; Author: Rahul M. Juliato
 ;;         Tim Harper <timcharper at gmail dot com>
 ;; Created: July 16 2019
-;; Version: 0.4
-;; Keywords: tools, unix, faces
+;; Version: 0.5
+;; Keywords: macos, themes, tools, unix, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
 ;; SPDX-License-Identifier: GPL-2.0-or-later
@@ -18,10 +18,12 @@
 ;; To customize the themes used by light / dark mode:
 ;;
 ;;     M-x customize-group auto-dark
+;;
+
 
 ;;; Code:
 (defgroup auto-dark nil
-  "Automatically changes emacs theme acording to MacOS dark-mode status."
+  "Automatically changes Emacs theme acording to MacOS dark-mode status."
   :group 'tools
   :prefix "auto-dark-*")
 
@@ -36,19 +38,22 @@
   :type 'symbol)
 
 (defcustom auto-dark--polling-interval-seconds 5
-  "The number of seconds between which to poll for dark mode state.  Emacs must be restarted for this value to take effect."
+  "The number of seconds between which to poll for dark mode state.
+Emacs must be restarted for this value to take effect."
   :group 'auto-dark
   :type 'integer)
 
 (defcustom auto-dark--allow-osascript nil
-  "Whether to allow function `auto-dark-mode' to shell out to osascript to check dark-mode state, if `ns-do-applescript' is not available."
+  "Whether to allow function `auto-dark-mode' to shell out to osascript:
+to check dark-mode state, if `ns-do-applescript' is not available."
   :group 'auto-dark
   :type 'boolean)
 
 (defvar auto-dark--last-dark-mode-state 'unknown)
 
 (defun auto-dark--is-dark-mode-builtin ()
-  "Invoke applescript using Emacs built-in AppleScript support to see if dark mode is enabled.  Return true if it is."
+  "Invoke applescript using Emacs built-in AppleScript support.
+In order to see if dark mode is enabled.  Return true if it is."
 
   (string-equal "true" (ns-do-applescript "tell application \"System Events\"
 	tell appearance preferences
@@ -61,7 +66,8 @@
 end tell")))
 
 (defun auto-dark--is-dark-mode-osascript ()
-  "Invoke applescript using Emacs using external shell command; this is less efficient, but works for non-GUI Emacs."
+  "Invoke applescript using Emacs using external shell command;
+this is less efficient, but works for non-GUI Emacs."
 
   (string-equal "true" (string-trim (shell-command-to-string "osascript -e 'tell application \"System Events\" to tell appearance preferences to return dark mode'"))))
 
@@ -72,7 +78,10 @@ end tell")))
   "List of hooks to run after light mode is loaded." )
 
 (defun auto-dark--is-dark-mode ()
-  "If supported, invoke applescript using Emacs built-in AppleScript support to see if dark mode is enabled.  Otherwise, check dark-mode status using osascript, if allowed by auto-dark--allow-osascript."
+  "If supported, invoke applescript using Emacs built-in:
+AppleScript support to see if dark mode is enabled.  Otherwise,
+check dark-mode status using osascript, if allowed by
+`auto-dark--allow-osascript'."
 
   (if (fboundp 'ns-do-applescript)
       (auto-dark--is-dark-mode-builtin)
@@ -80,7 +89,9 @@ end tell")))
     (and auto-dark--allow-osascript (auto-dark--is-dark-mode-osascript))))
 
 (defun auto-dark--check-and-set-dark-mode ()
-  "Set the theme according to Mac OS's dark mode state.  In order to prevent flickering, we only set the theme if we haven't already set the theme for the current dark mode state."
+  "Set the theme according to Mac OS's dark mode state.
+In order to prevent flickering, we only set the theme if we haven't
+already set the theme for the current dark mode state."
   ;; Get's MacOS dark mode state
   (let ((is-dark-mode (auto-dark--is-dark-mode)))
     (if (not (eq is-dark-mode auto-dark--last-dark-mode-state))
@@ -96,7 +107,27 @@ end tell")))
               (load-theme auto-dark--light-theme t)
               (run-hooks 'auto-dark-light-mode-hook)))))))
 
-(run-with-timer 0 auto-dark--polling-interval-seconds 'auto-dark--check-and-set-dark-mode)
+(defun auto-dark--ns-set-theme (appearance)
+  "Set light/dark theme using emacs-plus ns-system-appearance.
+Argument APPEARANCE should be light or dark."
+  (mapc #'disable-theme custom-enabled-themes)
+  (pcase appearance
+    ('dark
+         (progn
+                (disable-theme auto-dark--light-theme)
+                (load-theme auto-dark--dark-theme t)
+                (run-hooks 'auto-dark-dark-mode-hook)))
+    ('light
+         (progn
+               (disable-theme auto-dark--dark-theme)
+               (load-theme auto-dark--light-theme t)
+               (run-hooks 'auto-dark-light-mode-hook))
+     )))
+
+
+(if (boundp 'ns-system-appearance-change-functions)
+  (add-hook 'ns-system-appearance-change-functions #'auto-dark--ns-set-theme)
+  (run-with-timer 0 auto-dark--polling-interval-seconds #'auto-dark--check-and-set-dark-mode))
 
 (provide 'auto-dark)
 
