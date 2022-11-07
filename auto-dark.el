@@ -16,6 +16,7 @@
 ;; To enable it, install the package and add it to your load path:
 ;;
 ;;     (require 'auto-dark)
+;;     (auto-dark-mode t)
 ;;
 ;; To customize the themes used by light/dark mode:
 ;;
@@ -130,10 +131,30 @@ Argument APPEARANCE should be light or dark."
      (load-theme auto-dark-light-theme t)
      (run-hooks 'auto-dark-light-mode-hook))))
 
+(defvar auto-dark--timer nil)
+(defun auto-dark-start-timer ()
+  "Start auto-dark timer."
+  (setq auto-dark--timer
+        (run-with-timer 0 auto-dark-polling-interval-seconds #'auto-dark--check-and-set-dark-mode)))
+
+(defun auto-dark-stop-timer ()
+  "Stop auto-dark timer."
+  (when (timerp auto-dark--timer)
+    (cancel-timer auto-dark--timer)))
+
 ;;;###autoload
-(if (boundp 'ns-system-appearance-change-functions)
-    (add-hook 'ns-system-appearance-change-functions #'auto-dark--ns-set-theme)
-  (run-with-timer 0 auto-dark-polling-interval-seconds #'auto-dark--check-and-set-dark-mode))
+(define-minor-mode auto-dark-mode
+  "Toggle `auto-dark-mode' on or off."
+  :group 'auto-dark
+  :global t
+  :lighter "AD"
+  (if auto-dark-mode
+      (if (boundp 'ns-system-appearance-change-functions)
+          (add-hook 'ns-system-appearance-change-functions #'auto-dark--ns-set-theme)
+        (auto-dark-start-timer))
+    (if (boundp 'ns-system-appearance-change-functions)
+        (remove-hook 'ns-system-appearance-change-functions #'auto-dark--ns-set-theme)
+      (auto-dark-stop-timer))))
 
 (provide 'auto-dark)
 

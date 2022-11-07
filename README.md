@@ -9,16 +9,26 @@ By default, themes are wombat and leuven, since these are bundled with Emacs.
 
 ## Install
 Install it from [MELPA](https://melpa.org/#/auto-dark) and add to your `.emacs` file:
-```
+
+``` emacs-lisp
 (require 'auto-dark)
+(auto-dark-mode t)
 ```
 
 
 Or simply copy the auto-dark.el file to `~/.emacs.d/auto-dark/auto-dark.el` (or clone this repository there), and then add the following to your `.emacs`:
 
-```
+``` emacs-lisp
 (add-to-list 'load-path "~/.emacs.d/auto-dark/")
 (require 'auto-dark)
+(auto-dark-mode t)
+```
+
+Or use `use-package` to install:
+
+``` emacs-lisp
+(use-package auto-dark
+  :init (auto-dark-mode t))
 ```
 
 ## Usage
