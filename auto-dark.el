@@ -4,15 +4,15 @@
 ;;         Tim Harper <timcharper at gmail dot com>
 ;;         Vincent Zhang <seagle0128@gmail.com>
 ;; Created: July 16 2019
-;; Version: 0.6
-;; Keywords: macos, windows, themes, tools, unix, faces
+;; Version: 0.7
+;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
 ;; SPDX-License-Identifier: GPL-2.0-or-later
 
 ;;; Commentary:
 ;; Auto-Dark is an auto-changer between 2 themes, dark/light, respecting the
-;; overall settings of MacOS and Windows.
+;; overall settings of MacOS, Linux and Windows.
 ;; To enable it, install the package and add it to your load path:
 ;;
 ;;     (require 'auto-dark)
@@ -72,6 +72,10 @@ end tell")))
 this is less efficient, but works for non-GUI Emacs."
   (string-equal "true" (string-trim (shell-command-to-string "osascript -e 'tell application \"System Events\" to tell appearance preferences to return dark mode'"))))
 
+(defun auto-dark--is-dark-mode-dconf ()
+  "Invoke dconf using Emacs using external shell command."
+  (string-equal "'Yaru-dark'\n" (string-trim (shell-command-to-string "dconf read /org/gnome/desktop/interface/gtk-theme"))))
+
 (defun auto-dark--is-dark-mode-powershell ()
   "Invoke powershell using Emacs using external shell command."
   (string-equal "0" (string-trim (shell-command-to-string "powershell -noprofile -noninteractive \
@@ -96,6 +100,8 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
      (if (fboundp 'ns-do-applescript)
          (auto-dark--is-dark-mode-builtin)
        (and auto-dark-allow-osascript (auto-dark--is-dark-mode-osascript))))
+    ('gnu/linux
+     (auto-dark--is-dark-mode-dconf))
     ('windows-nt
      (auto-dark--is-dark-mode-powershell))))
 
