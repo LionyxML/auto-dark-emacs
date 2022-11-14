@@ -4,7 +4,7 @@
 ;;         Tim Harper <timcharper at gmail dot com>
 ;;         Vincent Zhang <seagle0128@gmail.com>
 ;; Created: July 16 2019
-;; Version: 0.5
+;; Version: 0.6
 ;; Keywords: macos, windows, themes, tools, unix, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
