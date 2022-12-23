@@ -118,13 +118,13 @@ In order to prevent flickering, we only set the theme if we haven't
 already set the theme for the current dark mode state."
   (let ((appearance (if (auto-dark--is-dark-mode) 'dark 'light)))
     (unless (eq appearance auto-dark--last-dark-mode-state)
-      (setq auto-dark--last-dark-mode-state appearance)
       (auto-dark--set-theme appearance))))
 
 (defun auto-dark--set-theme (appearance)
   "Set light/dark theme using emacs-plus ns-system-appearance.
 Argument APPEARANCE should be light or dark."
   (mapc #'disable-theme custom-enabled-themes)
+  (setq auto-dark--last-dark-mode-state appearance)
   (pcase appearance
     ('dark
      (disable-theme auto-dark-light-theme)
