@@ -3,6 +3,7 @@
 ;; Author: Rahul M. Juliato
 ;;         Tim Harper <timcharper at gmail dot com>
 ;;         Vincent Zhang <seagle0128@gmail.com>
+;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
 ;; Created: July 16 2019
 ;; Version: 0.7
 ;; Keywords: macos, windows, linux, themes, tools, faces
