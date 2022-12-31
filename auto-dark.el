@@ -1,11 +1,11 @@
-;;; auto-dark.el --- Automatically set the dark-mode theme based on MacOS status -*- lexical-binding: t; -*-
+;;; auto-dark.el --- Automatically sets the dark-mode theme based on macOS/Linux/Windows status -*- lexical-binding: t; -*-
 
 ;; Author: Rahul M. Juliato
 ;;         Tim Harper <timcharper at gmail dot com>
 ;;         Vincent Zhang <seagle0128@gmail.com>
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
 ;; Created: July 16 2019
-;; Version: 0.7
+;; Version: 0.8
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
@@ -61,13 +61,13 @@ to check dark-mode state, if `ns-do-applescript' is not available."
   "Invoke applescript using Emacs built-in AppleScript support.
 In order to see if dark mode is enabled.  Return true if it is."
   (string-equal "true" (ns-do-applescript "tell application \"System Events\"
-	tell appearance preferences
-		if (dark mode) then
-			return \"true\"
-		else
-			return \"false\"
-		end if
-	end tell
+        tell appearance preferences
+                if (dark mode) then
+                        return \"true\"
+                else
+                        return \"false\"
+                end if
+        end tell
 end tell")))
 
 (defun auto-dark--is-dark-mode-osascript ()

@@ -46,6 +46,10 @@ For terminal-based emacs, it is possible to check dark mode status using osascri
 
 ## Screenshot
 
-Here it's what it does.
+Some demos of this package in action.
 
+mp4 video:
+![auto-dark-emacs in acition full screen](images/demo.mp4)
+
+Gif image:
 ![auto-dark-emacs in action](images/demo.gif)
