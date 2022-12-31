@@ -48,4 +48,4 @@ For terminal-based emacs, it is possible to check dark mode status using osascri
 
 A demo of this package in action.
 
-![auto-dark-emacs in acition full screen](https://github.com/LionyxML/auto-dark-emacs/blob/docs/maintenance/images/demo.mp4?raw=true)
+![auto-dark-emacs in acition full screen](images/demo.gif)
