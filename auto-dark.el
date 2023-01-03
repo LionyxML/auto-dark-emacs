@@ -5,7 +5,7 @@
 ;;         Vincent Zhang <seagle0128@gmail.com>
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
 ;; Created: July 16 2019
-;; Version: 0.8
+;; Version: 0.9
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
@@ -26,6 +26,10 @@
 
 
 ;;; Code:
+
+;; Optional require of dbus squelches elisp compilation warnings
+(require 'dbus nil t)
+
 (defgroup auto-dark nil
   "Automatically changes Emacs theme acording to MacOS/Windows dark-mode status."
   :group 'tools
@@ -53,11 +57,21 @@ to check dark-mode state, if `ns-do-applescript' is not available."
   :group 'auto-dark
   :type 'boolean)
 
+(defcustom auto-dark-detection-method nil
+  "The method auto-dark should use to detect the system theme.
+
+Defaults to nil and will be populated through feature detection
+if left as such.  Only change this value if you know what you're
+doing!"
+  :group 'auto-dark
+  :type 'symbol
+  :options '(applescript osascript dbus powershell))
+
 (defvar auto-dark--last-dark-mode-state 'unknown)
 
 (defvar auto-dark--dbus-listener-object nil)
 
-(defun auto-dark--is-dark-mode-builtin ()
+(defun auto-dark--is-dark-mode-applescript ()
   "Invoke applescript using Emacs built-in AppleScript support.
 In order to see if dark mode is enabled.  Return true if it is."
   (string-equal "true" (ns-do-applescript "tell application \"System Events\"
@@ -99,18 +113,14 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
 
 (defun auto-dark--is-dark-mode ()
   "If dark mode is enabled."
-  (pcase system-type
-    ('darwin
-     ;; If supported, invoke applescript using Emacs built-in:
-     ;; AppleScript support to see if dark mode is enabled.  Otherwise,
-     ;; check dark-mode status using osascript, if allowed by
-     ;; `auto-dark--allow-osascript'.
-     (if (fboundp 'ns-do-applescript)
-         (auto-dark--is-dark-mode-builtin)
-       (and auto-dark-allow-osascript (auto-dark--is-dark-mode-osascript))))
-    ('gnu/linux
+  (pcase auto-dark-detection-method
+    ('applescript
+     (auto-dark--is-dark-mode-applescript))
+    ('osascript
+     (auto-dark--is-dark-mode-osascript))
+    ('dbus
      (auto-dark--is-dark-mode-dbus))
-    ('windows-nt
+    ('powershell
      (auto-dark--is-dark-mode-powershell))))
 
 (defun auto-dark--check-and-set-dark-mode ()
@@ -192,11 +202,26 @@ Remove theme change callback registered with D-Bus."
 
 (defun auto-dark--use-dbus ()
   "Determine whether we should use the dbus-* functions."
-  (and (fboundp 'dbus-register-signal)
-       (fboundp 'dbus-list-activatable-names)
-       (member "org.freedesktop.portal.Desktop"
-               (dbus-list-activatable-names :session))
-       t)) ;; t only here to make this a boolean
+  (eq auto-dark-detection-method 'dbus))
+
+(defun auto-dark--detect-detection-method ()
+  "Determine which theme detection method auto-dark should use."
+  (cond
+   ((and (eq system-type 'darwin)
+         (fboundp 'ns-do-applescript))
+    'applescript)
+   ((and (eq system-type 'darwin)
+         auto-dark-allow-osascript)
+    'osascript)
+   ((and (eq system-type 'gnu/linux)
+         (member 'dbus features)
+         (member "org.freedesktop.portal.Desktop"
+                 (dbus-list-activatable-names :session)))
+    'dbus)
+   ((eq system-type 'windows-nt)
+    'powershell)
+   (t
+    (error "Could not determine a viable theme detection mechanism!"))))
 
 ;;;###autoload
 (define-minor-mode auto-dark-mode
@@ -206,6 +231,8 @@ Remove theme change callback registered with D-Bus."
   :lighter "AD"
   (if auto-dark-mode
       (progn
+        (unless auto-dark-detection-method
+          (setq auto-dark-detection-method (auto-dark--detect-detection-method)))
         (auto-dark--check-and-set-dark-mode)
         (auto-dark--register-change-listener))
     (auto-dark--unregister-change-listener)))
