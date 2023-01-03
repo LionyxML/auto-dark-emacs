@@ -26,6 +26,8 @@
 
 
 ;;; Code:
+(require 'dbus)
+
 (defgroup auto-dark nil
   "Automatically changes Emacs theme acording to MacOS/Windows dark-mode status."
   :group 'tools
