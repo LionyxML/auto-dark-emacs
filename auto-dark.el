@@ -204,7 +204,7 @@ Remove theme change callback registered with D-Bus."
   "Determine whether we should use the dbus-* functions."
   (eq auto-dark-detection-method 'dbus))
 
-(defun auto-dark--detect-detection-method ()
+(defun auto-dark--determine-detection-method ()
   "Determine which theme detection method auto-dark should use."
   (cond
    ((and (eq system-type 'darwin)
@@ -232,7 +232,7 @@ Remove theme change callback registered with D-Bus."
   (if auto-dark-mode
       (progn
         (unless auto-dark-detection-method
-          (setq auto-dark-detection-method (auto-dark--detect-detection-method)))
+          (setq auto-dark-detection-method (auto-dark--determine-detection-method)))
         (auto-dark--check-and-set-dark-mode)
         (auto-dark--register-change-listener))
     (auto-dark--unregister-change-listener)))
