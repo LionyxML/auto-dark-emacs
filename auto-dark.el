@@ -91,12 +91,13 @@ this is less efficient, but works for non-GUI Emacs."
 
 (defun auto-dark--is-dark-mode-dbus ()
   "Use Emacs built-in D-Bus function to determine if dark theme is enabled."
-  (eq 1 (caar (dbus-call-method
-               :session
-               "org.freedesktop.portal.Desktop"
-               "/org/freedesktop/portal/desktop"
-               "org.freedesktop.portal.Settings" "Read"
-               "org.freedesktop.appearance" "color-scheme"))))
+  (eq 1 (caar (dbus-ignore-errors
+                (dbus-call-method
+                 :session
+                 "org.freedesktop.portal.Desktop"
+                 "/org/freedesktop/portal/desktop"
+                 "org.freedesktop.portal.Settings" "Read"
+                 "org.freedesktop.appearance" "color-scheme")))))
 
 (defun auto-dark--is-dark-mode-powershell ()
   "Invoke powershell using Emacs using external shell command."
