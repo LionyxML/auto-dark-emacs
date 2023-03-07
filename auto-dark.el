@@ -229,7 +229,7 @@ Remove theme change callback registered with D-Bus."
   "Toggle `auto-dark-mode' on or off."
   :group 'auto-dark
   :global t
-  :lighter "AD"
+  :lighter " AD"
   (if auto-dark-mode
       (progn
         (unless auto-dark-detection-method
