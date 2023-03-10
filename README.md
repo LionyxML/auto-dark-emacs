@@ -29,8 +29,18 @@ Or use `use-package` to install:
 
 ```emacs-lisp
 (use-package auto-dark
-  :init (auto-dark-mode t))
+  :config (auto-dark-mode t))
 ```
+
+### Spacemacs
+
+If you use Spacemacs, add `(auto-dark)` to the `dotspacemacs-additional-packages` list and add the following to `dotspacemacs/user-config`:
+```emacs-lisp
+(use-package auto-dark
+  :init (spacemacs/defer-until-after-user-config (lambda () (auto-dark-mode t)))
+  :defer t)
+```
+This ensures that `auto-dark-mode` is activated only after spacemacs's built-in theme loading logic.
 
 ## Usage
 
