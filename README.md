@@ -42,6 +42,22 @@ If you use Spacemacs, add `(auto-dark)` to the `dotspacemacs-additional-packages
 ```
 This ensures that `auto-dark-mode` is activated only after spacemacs's built-in theme loading logic.
 
+### Doom Emacs 
+If you use Doom Emacs, the following config should do the trick
+
+```emacs-lisp
+;; In your packages.el
+(package! auto-dark)
+
+;; In your config.el
+
+(after! doom-themes
+  ;; set  your favorite themes
+  (setq! auto-dark-dark-theme 'doom-one
+        auto-dark-light-theme 'doom-one-light)
+  (auto-dark-mode 1))
+```
+
 ## Usage
 
 Change your dark-mode settings on MacOS/Linux/Windows and let the magic happens :D
