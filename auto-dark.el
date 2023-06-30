@@ -71,7 +71,7 @@ if left as such.  Only change this value if you know what you're
 doing!"
   :group 'auto-dark
   :type 'symbol
-  :options '(applescript osascript dbus powershell cmd))
+  :options '(applescript osascript dbus powershell winreg))
 
 (defvar auto-dark--last-dark-mode-state 'unknown)
 
@@ -112,10 +112,11 @@ this is less efficient, but works for non-GUI Emacs."
 HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
 -Name AppsUseLightTheme"))))
 
-(defun auto-dark--is-dark-mode-cmd ()
-  "Invoke cmd using Emacs using external shell command."
-  (let ((output (split-string (string-trim (shell-command-to-string "reg query HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize /v AppsUseLightTheme")))))
-    (string-equal "0x0" (car (last output)))))
+(defun auto-dark--is-dark-mode-winreg ()
+  "Use Emacs built-in Windows Registry function to determine if dark theme is enabled."
+  (eq 0 (w32-read-registry 'HKCU
+			   "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
+			   "AppsUseLightTheme")))
 
 (defvar auto-dark-dark-mode-hook nil
   "List of hooks to run after dark mode is loaded." )
@@ -134,8 +135,8 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
      (auto-dark--is-dark-mode-dbus))
     ('powershell
      (auto-dark--is-dark-mode-powershell))
-    ('cmd
-     (auto-dark--is-dark-mode-cmd))))
+    ('winreg
+     (auto-dark--is-dark-mode-winreg))))
 
 (defun auto-dark--check-and-set-dark-mode ()
   "Set the theme according to the OS's dark mode state.
@@ -236,7 +237,7 @@ Remove theme change callback registered with D-Bus."
 	 auto-dark-allow-powershell)
     'powershell)
    ((eq system-type 'windows-nt)
-    'cmd)
+    'winreg)
    (t
     (error "Could not determine a viable theme detection mechanism!"))))
 
