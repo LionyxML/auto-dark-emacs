@@ -57,6 +57,12 @@ to check dark-mode state, if `ns-do-applescript' is not available."
   :group 'auto-dark
   :type 'boolean)
 
+(defcustom auto-dark-allow-powershell nil
+  "Wheter to allow function `auto-dark-mode' to shell out to powershell:
+to check dark-mode state."
+  :group 'auto-dark
+  :type 'boolean)
+
 (defcustom auto-dark-detection-method nil
   "The method auto-dark should use to detect the system theme.
 
@@ -65,7 +71,7 @@ if left as such.  Only change this value if you know what you're
 doing!"
   :group 'auto-dark
   :type 'symbol
-  :options '(applescript osascript dbus powershell))
+  :options '(applescript osascript dbus powershell cmd))
 
 (defvar auto-dark--last-dark-mode-state 'unknown)
 
@@ -106,6 +112,11 @@ this is less efficient, but works for non-GUI Emacs."
 HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
 -Name AppsUseLightTheme"))))
 
+(defun auto-dark--is-dark-mode-cmd ()
+  "Invoke cmd using Emacs using external shell command."
+  (let ((output (split-string (string-trim (shell-command-to-string "reg query HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize /v AppsUseLightTheme")))))
+    (string-equal "0x0" (car (last output)))))
+
 (defvar auto-dark-dark-mode-hook nil
   "List of hooks to run after dark mode is loaded." )
 
@@ -122,7 +133,9 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
     ('dbus
      (auto-dark--is-dark-mode-dbus))
     ('powershell
-     (auto-dark--is-dark-mode-powershell))))
+     (auto-dark--is-dark-mode-powershell))
+    ('cmd
+     (auto-dark--is-dark-mode-cmd))))
 
 (defun auto-dark--check-and-set-dark-mode ()
   "Set the theme according to the OS's dark mode state.
@@ -219,8 +232,11 @@ Remove theme change callback registered with D-Bus."
          (member "org.freedesktop.portal.Desktop"
                  (dbus-list-activatable-names :session)))
     'dbus)
-   ((eq system-type 'windows-nt)
+   ((and (eq system-type 'windows-nt)
+	 auto-dark-allow-powershell)
     'powershell)
+   ((eq system-type 'windows-nt)
+    'cmd)
    (t
     (error "Could not determine a viable theme detection mechanism!"))))
 
