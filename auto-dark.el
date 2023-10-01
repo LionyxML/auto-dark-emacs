@@ -186,7 +186,7 @@ to change the theme."
          (lambda (path var val)
            (when (and (string= path "org.freedesktop.appearance")
                       (string= var "color-scheme"))
-             (auto-dark--set-theme (pcase (car val) (0 'light) (1 'dark))))))))
+             (auto-dark--set-theme (pcase (car val) (0 'light) (1 'dark) (2 'light))))))))
 
 (defun auto-dark--unregister-dbus-listener ()
   "Unregister our callback function with D-Bus.
