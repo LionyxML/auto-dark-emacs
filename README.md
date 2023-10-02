@@ -4,7 +4,7 @@
 
 Do you want Emacs to follow your MacOS/Linux/Windows Dark-mode on/off options?
 
-This is it. This program lets Emacs change between 2 user defined (customizable) themes to be automatically changed when Dark Mode set on/off on MacOS/Linux/Windows. Now only supports Gnome on Linux.
+This is it. This program lets Emacs change between 2 user defined (customizable) themes to be automatically changed when Dark Mode set on/off on MacOS/Linux/Windows. For now it supports Linux through Gnome and Termux(Android).
 
 By default, themes are _wombat_ and _leuven_, since these are bundled with Emacs.
 
@@ -66,12 +66,20 @@ Change your dark-mode settings on MacOS/Linux/Windows and let the magic happens 
 
 The light/dark themes can be customized using the Emacs customization system. `M-x customize-group auto-dark`.
 
-## OSA Script fallback
+## OSA Script fallback (macOS)
 
 For terminal-based emacs, it is possible to check dark mode status using osascript rather than relying on the built-in Applescript support that GUI Emacs provides. To enable it, customize `dark-mode-allow-osascript` and set it to `t`.
 
 ## Screenshot
 
-A demo of this package in action.
+This package in action:
 
-![auto-dark-emacs in acition full screen](images/demo.gif)
+- macOS
+
+![auto-dark-emacs in action - macos](images/demo.gif)
+
+
+- Linux (Gnome DE)
+
+![auto-dark-emacs in action - linux gnome](images/demo_gnome.gif)
+
