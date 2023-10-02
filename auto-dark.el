@@ -118,6 +118,11 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
 			   "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
 			   "AppsUseLightTheme")))
 
+(defun auto-dark--is-dark-mode-termux ()
+  "Use Termux way to determine if dark theme is enabled. ref: https://github.com/termux/termux-api/issues/425"
+  (string-equal "Night mode: yes"
+                (shell-command-to-string "echo -n $(cmd uimode night 2>&1 </dev/null)")))
+
 (defvar auto-dark-dark-mode-hook nil
   "List of hooks to run after dark mode is loaded." )
 
@@ -136,7 +141,9 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
     ('powershell
      (auto-dark--is-dark-mode-powershell))
     ('winreg
-     (auto-dark--is-dark-mode-winreg))))
+     (auto-dark--is-dark-mode-winreg))
+    ('termux
+     (auto-dark--is-dark-mode-termux))))
 
 (defun auto-dark--check-and-set-dark-mode ()
   "Set the theme according to the OS's dark mode state.
@@ -233,8 +240,13 @@ Remove theme change callback registered with D-Bus."
          (member "org.freedesktop.portal.Desktop"
                  (dbus-list-activatable-names :session)))
     'dbus)
+   ((and (eq system-type 'gnu/linux)
+         (member 'dbus features)
+         (search "termux-fix-shebang"
+                 (shell-command-to-string "command -v termux-fix-shebang")))
+    'termux)
    ((and (eq system-type 'windows-nt)
-	 auto-dark-allow-powershell)
+         auto-dark-allow-powershell)
     'powershell)
    ((eq system-type 'windows-nt)
     'winreg)
