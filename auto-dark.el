@@ -23,7 +23,9 @@
 ;;
 ;;     M-x customize-group auto-dark
 ;;
-
+;; If you're using DoomEmacs or Spacemacs, follow the installation tips
+;; on https://github.com/LionyxML/auto-dark-emacs.
+;;
 
 ;;; Code:
 

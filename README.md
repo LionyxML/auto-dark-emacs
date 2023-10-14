@@ -66,6 +66,13 @@ Change your dark-mode settings on MacOS/Linux/Windows and let the magic happens 
 
 The light/dark themes can be customized using the Emacs customization system. `M-x customize-group auto-dark`.
 
+You can also take advantage of the hooks `auto-dark-dark-mode-hook`
+and `auto-dark-light-mode-hook` to make it even further
+customizable. Take a look at this article on how to [Integrate
+Catppuccin with
+Auto-Dark](https://www.rahuljuliato.com/posts/auto-dark-catppuccin).
+
+
 ## OSA Script fallback (macOS)
 
 For terminal-based emacs, it is possible to check dark mode status using osascript rather than relying on the built-in Applescript support that GUI Emacs provides. To enable it, customize `dark-mode-allow-osascript` and set it to `t`.
