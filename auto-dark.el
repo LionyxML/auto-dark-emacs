@@ -232,7 +232,8 @@ Remove theme change callback registered with D-Bus."
   "Determine which theme detection method auto-dark should use."
   (cond
    ((and (eq system-type 'darwin)
-         (fboundp 'ns-do-applescript))
+         (fboundp 'ns-do-applescript)
+	 (eq window-system 'ns))
     'applescript)
    ((and (eq system-type 'darwin)
          auto-dark-allow-osascript)
