@@ -51,8 +51,8 @@ If you use Doom Emacs, the following config should do the trick
 
 ;; In your config.el
 
-(after! doom-themes
-  ;; set  your favorite themes
+(after! doom-ui
+  ;; set your favorite themes
   (setq! auto-dark-dark-theme 'doom-one
         auto-dark-light-theme 'doom-one-light)
   (auto-dark-mode 1))
