@@ -233,7 +233,7 @@ Remove theme change callback registered with D-Bus."
   (cond
    ((and (eq system-type 'darwin)
          (fboundp 'ns-do-applescript)
-	 (eq window-system 'ns))
+	     (eq window-system 'ns))
     'applescript)
    ((and (eq system-type 'darwin)
          auto-dark-allow-osascript)
@@ -245,8 +245,8 @@ Remove theme change callback registered with D-Bus."
     'dbus)
    ((and (eq system-type 'gnu/linux)
          (member 'dbus features)
-         (search "termux-fix-shebang"
-                 (shell-command-to-string "command -v termux-fix-shebang")))
+         (cl-search "termux-fix-shebang"
+                    (shell-command-to-string "command -v termux-fix-shebang")))
     'termux)
    ((and (eq system-type 'windows-nt)
          auto-dark-allow-powershell)
