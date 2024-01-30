@@ -5,7 +5,7 @@
 ;;         Vincent Zhang <seagle0128@gmail.com>
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
 ;; Created: July 16 2019
-;; Version: 0.10
+;; Version: 0.11
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
@@ -40,12 +40,12 @@
 (defcustom auto-dark-dark-theme 'wombat
   "The theme to enable when dark-mode is active."
   :group 'auto-dark
-  :type 'symbol)
+  :type '(choice symbol (const nil)))
 
 (defcustom auto-dark-light-theme 'leuven
   "The theme to enable when dark-mode is inactive."
   :group 'auto-dark
-  :type 'symbol)
+  :type '(choice symbol (const nil)))
 
 (defcustom auto-dark-polling-interval-seconds 5
   "The number of seconds between which to poll for dark mode state.
@@ -162,12 +162,16 @@ Argument APPEARANCE should be light or dark."
   (setq auto-dark--last-dark-mode-state appearance)
   (pcase appearance
     ('dark
-     (disable-theme auto-dark-light-theme)
-     (load-theme auto-dark-dark-theme t)
+     (when auto-dark-light-theme
+	   (disable-theme auto-dark-light-theme))
+     (when auto-dark-dark-theme
+	   (load-theme auto-dark-dark-theme t))
      (run-hooks 'auto-dark-dark-mode-hook))
     ('light
-     (disable-theme auto-dark-dark-theme)
-     (load-theme auto-dark-light-theme t)
+     (when auto-dark-dark-theme
+	   (disable-theme auto-dark-dark-theme))
+     (when auto-dark-light-theme
+	   (load-theme auto-dark-light-theme t))
      (run-hooks 'auto-dark-light-mode-hook))))
 
 (defvar auto-dark--timer nil)
