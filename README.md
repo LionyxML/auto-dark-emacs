@@ -8,7 +8,7 @@ Do you want Emacs to follow your MacOS/Linux/Windows/Android dark-mode on/off
 options?
 
 
-This package, auto-dark-mode, introduces a minor mode in Emacs that
+This package, `auto-dark-mode`, introduces a minor mode in Emacs that
 enables automatic switching between two user-defined (customizable)
 themes. This transition occurs seamlessly in response to Dark Mode
 being enabled or disabled across MacOS, Linux, Windows, and Android
@@ -92,8 +92,8 @@ enough:
 ## Notes for MacOS users
 
 From the box, this package takes advantage of some built-in functionality found
-on the formulaes ![Emacs Plus](https://github.com/d12frosted/homebrew-emacs-plus) 
-and ![Emacs Mac](https://github.com/railwaycat/homebrew-emacsmacport?tab=readme-ov-file)
+on the formulaes [Emacs Plus](https://github.com/d12frosted/homebrew-emacs-plus) 
+and [Emacs Mac](https://github.com/railwaycat/homebrew-emacsmacport?tab=readme-ov-file)
 to make detecting switches faster.
 
 
@@ -116,7 +116,7 @@ by going to:
 
 
 ```
- Settings -> Privacy & Security -> Emacs -> System Events 
+Settings -> Privacy & Security -> Emacs -> System Events 
 ```
 
 
