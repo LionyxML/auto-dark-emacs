@@ -5,7 +5,7 @@
 ;;         Vincent Zhang <seagle0128@gmail.com>
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
 ;; Created: July 16 2019
-;; Version: 0.11
+;; Version: 0.12
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
@@ -23,7 +23,7 @@
 ;;
 ;;     M-x customize-group auto-dark
 ;;
-;; If you're using DoomEmacs or Spacemacs, follow the installation tips
+;; If you're using Doom Emacs or Spacemacs, follow the installation tips
 ;; on https://github.com/LionyxML/auto-dark-emacs.
 ;;
 
@@ -55,12 +55,13 @@ Emacs must be restarted for this value to take effect."
 
 (defcustom auto-dark-allow-osascript nil
   "Whether to allow function `auto-dark-mode' to shell out to osascript:
-to check dark-mode state, if `ns-do-applescript' is not available."
+to check dark-mode state, if `ns-do-applescript' or `mac-do-applescript'
+is not available."
   :group 'auto-dark
   :type 'boolean)
 
 (defcustom auto-dark-allow-powershell nil
-  "Wheter to allow function `auto-dark-mode' to shell out to powershell:
+  "Whether to allow function `auto-dark-mode' to shell out to powershell:
 to check dark-mode state."
   :group 'auto-dark
   :type 'boolean)
@@ -80,8 +81,16 @@ doing!"
 (defvar auto-dark--dbus-listener-object nil)
 
 (defun auto-dark--is-dark-mode-applescript ()
-  "Invoke applescript using Emacs built-in AppleScript support.
-In order to see if dark mode is enabled.  Return true if it is."
+  "Invoke AppleScript using Emacs built-in AppleScript support.
+In order to check if dark mode is enabled.  Return true if it is."
+  (if (fboundp 'ns-do-applescript)
+      (auto-dark--is-dark-mode-ns)
+    (if (fboundp 'mac-do-applescript)
+        (auto-dark--is-dark-mode-mac)
+      (error "No AppleScript support available in this Emacs build.  Try setting `dark-mode-allow-osascript` to t"))))
+
+(defun auto-dark--is-dark-mode-ns ()
+  "Check if dark mode is enabled using ns-do-applescript."
   (string-equal "true" (ns-do-applescript "tell application \"System Events\"
         tell appearance preferences
                 if (dark mode) then
@@ -91,6 +100,19 @@ In order to see if dark mode is enabled.  Return true if it is."
                 end if
         end tell
 end tell")))
+
+(defun auto-dark--is-dark-mode-mac ()
+  "Check if dark mode is enabled using `mac-do-applescript'."
+  (string-equal "\"true\"" (mac-do-applescript "tell application \"System Events\"
+        tell appearance preferences
+                if (dark mode) then
+                        return \"true\"
+                else
+                        return \"false\"
+                end if
+        end tell
+end tell")))
+
 
 (defun auto-dark--is-dark-mode-osascript ()
   "Invoke applescript using Emacs using external shell command;
@@ -115,13 +137,14 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
 -Name AppsUseLightTheme"))))
 
 (defun auto-dark--is-dark-mode-winreg ()
-  "Use Emacs built-in Windows Registry function to determine if dark theme is enabled."
+  "Use Emacs built-in Windows Registry function.
+In order to determine if dark theme is enabled."
   (eq 0 (w32-read-registry 'HKCU
 			   "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
 			   "AppsUseLightTheme")))
 
 (defun auto-dark--is-dark-mode-termux ()
-  "Use Termux way to determine if dark theme is enabled. ref: https://github.com/termux/termux-api/issues/425"
+  "Use Termux way to determine if dark theme is enabled.  ref: https://github.com/termux/termux-api/issues/425."
   (string-equal "Night mode: yes"
                 (shell-command-to-string "echo -n $(cmd uimode night 2>&1 </dev/null)")))
 
@@ -156,8 +179,7 @@ already set the theme for the current dark mode state."
       (auto-dark--set-theme appearance))))
 
 (defun auto-dark--set-theme (appearance)
-  "Set light/dark theme using emacs-plus ns-system-appearance.
-Argument APPEARANCE should be light or dark."
+  "Set light/dark theme Argument APPEARANCE should be light or dark."
   (mapc #'disable-theme custom-enabled-themes)
   (setq auto-dark--last-dark-mode-state appearance)
   (pcase appearance
@@ -211,6 +233,8 @@ Remove theme change callback registered with D-Bus."
   (cond
    ((auto-dark--use-ns-system-appearance)
     (add-hook 'ns-system-appearance-change-functions #'auto-dark--set-theme))
+   ((auto-dark--use-mac-system-appearance)
+    (add-hook 'mac-effective-appearance-change-hook #'auto-dark--check-and-set-dark-mode))
    ((auto-dark--use-dbus)
     (auto-dark--register-dbus-listener))
    (t (auto-dark-start-timer))))
@@ -220,6 +244,8 @@ Remove theme change callback registered with D-Bus."
   (cond
    ((auto-dark--use-ns-system-appearance)
     (remove-hook 'ns-system-appearance-change-functions #'auto-dark--set-theme))
+   ((auto-dark--use-mac-system-appearance)
+    (remove-hook 'mac-effective-appearance-change-hook #'auto-dark--check-and-set-dark-mode))
    ((auto-dark--use-dbus)
     (auto-dark--unregister-dbus-listener))
    (t (auto-dark-stop-timer))))
@@ -227,6 +253,10 @@ Remove theme change callback registered with D-Bus."
 (defun auto-dark--use-ns-system-appearance ()
   "Determine whether we should use the ns-system-appearance-* functions."
   (boundp 'ns-system-appearance-change-functions))
+
+(defun auto-dark--use-mac-system-appearance ()
+  "Determine whether we should use the `mac-effective-appearance-change-hook'."
+  (boundp 'mac-effective-appearance-change-hook))
 
 (defun auto-dark--use-dbus ()
   "Determine whether we should use the dbus-* functions."
@@ -236,8 +266,10 @@ Remove theme change callback registered with D-Bus."
   "Determine which theme detection method auto-dark should use."
   (cond
    ((and (eq system-type 'darwin)
-         (fboundp 'ns-do-applescript)
-	     (eq window-system 'ns))
+         (or (fboundp 'ns-do-applescript)
+             (fboundp 'mac-do-applescript))
+		 (or (eq window-system 'ns)
+			 (eq window-system 'mac)))
     'applescript)
    ((and (eq system-type 'darwin)
          auto-dark-allow-osascript)
