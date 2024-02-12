@@ -111,7 +111,7 @@ You can do this by adding to your configuration:
 
 
 Doing so will probably make MacOS prompt you for security permissions.
-If by any change it does not prompt you, you can check permissions on MacOS
+If by any chance it does not prompt you, you can check permissions on MacOS
 by going to:
 
 
