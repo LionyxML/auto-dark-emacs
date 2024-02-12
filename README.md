@@ -106,7 +106,7 @@ You can do this by adding to your configuration:
 
 
 ```emacs-lisp
-(setq dark-mode-allow-osascript t)
+(setq auto-dark-allow-osascript t)
 ```
 
 
