@@ -87,7 +87,7 @@ In order to check if dark mode is enabled.  Return true if it is."
       (auto-dark--is-dark-mode-ns)
     (if (fboundp 'mac-do-applescript)
         (auto-dark--is-dark-mode-mac)
-      (error "No AppleScript support available in this Emacs build.  Try setting `dark-mode-allow-osascript` to t"))))
+      (error "No AppleScript support available in this Emacs build.  Try setting `auto-dark-allow-osascript` to t"))))
 
 (defun auto-dark--is-dark-mode-ns ()
   "Check if dark mode is enabled using ns-do-applescript."
