@@ -74,7 +74,7 @@ if left as such.  Only change this value if you know what you're
 doing!"
   :group 'auto-dark
   :type 'symbol
-  :options '(applescript osascript dbus powershell winreg))
+  :options '(applescript osascript dbus powershell winreg termux))
 
 (defvar auto-dark--last-dark-mode-state 'unknown)
 
