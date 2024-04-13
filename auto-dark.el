@@ -74,7 +74,7 @@ if left as such.  Only change this value if you know what you're
 doing!"
   :group 'auto-dark
   :type 'symbol
-  :options '(applescript osascript dbus powershell winreg termux))
+  :options '(applescript osascript dbus powershell winreg termux wsl))
 
 (defvar auto-dark--last-dark-mode-state 'unknown)
 
@@ -148,6 +148,10 @@ In order to determine if dark theme is enabled."
   (string-equal "Night mode: yes"
                 (shell-command-to-string "echo -n $(cmd uimode night 2>&1 </dev/null)")))
 
+(defun auto-dark--is-dark-mode-wsl ()
+  "Invoke powershell from inside WSL shell using external shell command."
+  (not (string< "1" (shell-command-to-string "powershell.exe '(get-itemproperty -Path Registry::\\HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize).AppsUseLightTheme'"))))
+
 (defvar auto-dark-dark-mode-hook nil
   "List of hooks to run after dark mode is loaded." )
 
@@ -168,7 +172,9 @@ In order to determine if dark theme is enabled."
     ('winreg
      (auto-dark--is-dark-mode-winreg))
     ('termux
-     (auto-dark--is-dark-mode-termux))))
+     (auto-dark--is-dark-mode-termux))
+    ('wsl
+     (auto-dark--is-dark-mode-wsl))))
 
 (defun auto-dark--check-and-set-dark-mode ()
   "Set the theme according to the OS's dark mode state.
@@ -289,6 +295,9 @@ Remove theme change callback registered with D-Bus."
     'powershell)
    ((eq system-type 'windows-nt)
     'winreg)
+   ((and (eq system-type 'gnu/linux)
+	 (string-match "microsoft-standard-WSL" (shell-command-to-string "uname -a")))
+    'wsl)   
    (t
     (error "Could not determine a viable theme detection mechanism!"))))
 
