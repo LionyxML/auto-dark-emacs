@@ -140,8 +140,8 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
   "Use Emacs built-in Windows Registry function.
 In order to determine if dark theme is enabled."
   (eq 0 (w32-read-registry 'HKCU
-			   "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
-			   "AppsUseLightTheme")))
+                           "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
+                           "AppsUseLightTheme")))
 
 (defun auto-dark--is-dark-mode-termux ()
   "Use Termux way to determine if dark theme is enabled.  ref: https://github.com/termux/termux-api/issues/425."
@@ -178,6 +178,11 @@ already set the theme for the current dark mode state."
     (unless (eq appearance auto-dark--last-dark-mode-state)
       (auto-dark--set-theme appearance))))
 
+(defun auto-dark--update-frame-backgrounds (appearance)
+  "Sets the ‘frame-background-mode’ to all frames to APPEARANCE."
+  (setq frame-background-mode appearance)
+  (mapc #'frame-set-background-mode (frame-list)))
+
 (defun auto-dark--set-theme (appearance)
   "Set light/dark theme Argument APPEARANCE should be light or dark."
   (mapc #'disable-theme custom-enabled-themes)
@@ -185,15 +190,17 @@ already set the theme for the current dark mode state."
   (pcase appearance
     ('dark
      (when auto-dark-light-theme
-	   (disable-theme auto-dark-light-theme))
+       (disable-theme auto-dark-light-theme))
+     (auto-dark--update-frame-backgrounds 'dark)
      (when auto-dark-dark-theme
-	   (load-theme auto-dark-dark-theme t))
+       (load-theme auto-dark-dark-theme t))
      (run-hooks 'auto-dark-dark-mode-hook))
     ('light
      (when auto-dark-dark-theme
-	   (disable-theme auto-dark-dark-theme))
+       (disable-theme auto-dark-dark-theme))
+     (auto-dark--update-frame-backgrounds 'light)
      (when auto-dark-light-theme
-	   (load-theme auto-dark-light-theme t))
+       (load-theme auto-dark-light-theme t))
      (run-hooks 'auto-dark-light-mode-hook))))
 
 (defvar auto-dark--timer nil)
@@ -268,8 +275,8 @@ Remove theme change callback registered with D-Bus."
    ((and (eq system-type 'darwin)
          (or (fboundp 'ns-do-applescript)
              (fboundp 'mac-do-applescript))
-		 (or (eq window-system 'ns)
-			 (eq window-system 'mac)))
+                 (or (eq window-system 'ns)
+                         (eq window-system 'mac)))
     'applescript)
    ((and (eq system-type 'darwin)
          auto-dark-allow-osascript)
