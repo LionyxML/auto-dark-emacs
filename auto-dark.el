@@ -140,8 +140,8 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
   "Use Emacs built-in Windows Registry function.
 In order to determine if dark theme is enabled."
   (eq 0 (w32-read-registry 'HKCU
-                           "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
-                           "AppsUseLightTheme")))
+			   "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
+			   "AppsUseLightTheme")))
 
 (defun auto-dark--is-dark-mode-termux ()
   "Use Termux way to determine if dark theme is enabled.  ref: https://github.com/termux/termux-api/issues/425."
@@ -179,7 +179,7 @@ already set the theme for the current dark mode state."
       (auto-dark--set-theme appearance))))
 
 (defun auto-dark--update-frame-backgrounds (appearance)
-  "Sets the ‘frame-background-mode’ to all frames to APPEARANCE."
+  "Set the `frame-background-mode' for all frames to APPEARANCE."
   (setq frame-background-mode appearance)
   (mapc #'frame-set-background-mode (frame-list)))
 
@@ -275,8 +275,8 @@ Remove theme change callback registered with D-Bus."
    ((and (eq system-type 'darwin)
          (or (fboundp 'ns-do-applescript)
              (fboundp 'mac-do-applescript))
-                 (or (eq window-system 'ns)
-                         (eq window-system 'mac)))
+		 (or (eq window-system 'ns)
+			 (eq window-system 'mac)))
     'applescript)
    ((and (eq system-type 'darwin)
          auto-dark-allow-osascript)
