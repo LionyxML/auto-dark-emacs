@@ -37,14 +37,19 @@
   :group 'tools
   :prefix "auto-dark-*")
 
+;; Dark & light themes need to be set together because enabling and disabling
+;; themes modifies `custom-enabled-themes', so if only one mode were expected to
+;; default to `custom-enabled-themes', it would use the wrong list of themes
+;; after the first time the other mode enables its themes.
 (defcustom auto-dark-themes nil
   "The themes to enable for dark and light modes.
-The default is to use the themes in ‘custom-enabled-themes’, but that only works
-if the theme is aware of ‘frame-background-mode’, which many don’t.
+The default is to use the themes in `custom-enabled-themes', but that only works
+if the themes are aware of `frame-background-mode', which many aren’t.
 
-In that case, you can set explicit lists of themes to switch between for dark
-and light modes. Like with ‘custom-enabled-themes’, the earlier themes in the
-list have higher precedence."
+If your themes aren’t aware of `frame-background-mode' (or you just prefer
+different themes for dark and light modes), you can set explicit lists of themes
+for each mode. Like with `custom-enabled-themes', the earlier themes in the list
+have higher precedence."
   :group 'auto-dark
   :type '(choice
           (const :tag "Use custom-enabled-themes" nil)
@@ -53,12 +58,16 @@ list have higher precedence."
                 (repeat :tag "Light" symbol))))
 
 (defcustom auto-dark-dark-theme 'wombat
-  "The theme to enable when dark-mode is active."
+  "The theme to enable when dark-mode is active.
+
+This variable is obsolete. You should set `auto-dark-themes' instead."
   :group 'auto-dark
   :type '(choice symbol (const nil)))
 
 (defcustom auto-dark-light-theme 'leuven
-  "The theme to enable when dark-mode is inactive."
+  "The theme to enable when dark-mode is inactive.
+
+This variable is obsolete. You should set `auto-dark-themes' instead."
   :group 'auto-dark
   :type '(choice symbol (const nil)))
 
