@@ -89,35 +89,28 @@ In order to check if dark mode is enabled.  Return true if it is."
         (auto-dark--is-dark-mode-mac)
       (error "No AppleScript support available in this Emacs build.  Try setting `auto-dark-allow-osascript` to t"))))
 
+(defconst auto-dark--is-dark-mode-applescript
+  "tell application \"System Events\" to tell appearance preferences to return dark mode"
+  "This is AppleScript code that returns an AppleScript boolean value.
+It is “true” if the system is in dark mode, and “false” otherwise.")
+
 (defun auto-dark--is-dark-mode-ns ()
-  "Check if dark mode is enabled using ns-do-applescript."
-  (string-equal "true" (ns-do-applescript "tell application \"System Events\"
-        tell appearance preferences
-                if (dark mode) then
-                        return \"true\"
-                else
-                        return \"false\"
-                end if
-        end tell
-end tell")))
+  "Check if dark mode is enabled using `ns-do-applescript'."
+  ;; `ns-do-applescript' doesn’t support booleans, so we convert to an integer.
+  (/= 0
+      (ns-do-applescript (concat auto-dark--is-dark-mode-applescript
+                                 " as integer"))))
 
 (defun auto-dark--is-dark-mode-mac ()
   "Check if dark mode is enabled using `mac-do-applescript'."
-  (string-equal "\"true\"" (mac-do-applescript "tell application \"System Events\"
-        tell appearance preferences
-                if (dark mode) then
-                        return \"true\"
-                else
-                        return \"false\"
-                end if
-        end tell
-end tell")))
-
+  (string-equal "true"
+                (mac-do-applescript auto-dark--is-dark-mode-applescript)))
 
 (defun auto-dark--is-dark-mode-osascript ()
-  "Invoke applescript using Emacs using external shell command;
+  "Invoke AppleScript using Emacs using external shell command;
 this is less efficient, but works for non-GUI Emacs."
-  (string-equal "true" (string-trim (shell-command-to-string "osascript -e 'tell application \"System Events\" to tell appearance preferences to return dark mode'"))))
+  (equal '("true")
+         (process-lines "osascript" "-e" auto-dark--is-dark-mode-applescript)))
 
 (defun auto-dark--is-dark-mode-dbus ()
   "Use Emacs built-in D-Bus function to determine if dark theme is enabled."
