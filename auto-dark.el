@@ -271,33 +271,33 @@ Remove theme change callback registered with D-Bus."
 
 (defun auto-dark--determine-detection-method ()
   "Determine which theme detection method auto-dark should use."
-  (cond
-   ((and (eq system-type 'darwin)
-         (or (fboundp 'ns-do-applescript)
-             (fboundp 'mac-do-applescript))
-		 (or (eq window-system 'ns)
-			 (eq window-system 'mac)))
-    'applescript)
-   ((and (eq system-type 'darwin)
-         auto-dark-allow-osascript)
-    'osascript)
-   ((and (eq system-type 'gnu/linux)
-         (member 'dbus features)
-         (member "org.freedesktop.portal.Desktop"
-                 (dbus-list-activatable-names :session)))
-    'dbus)
-   ((and (eq system-type 'gnu/linux)
-         (member 'dbus features)
-         (cl-search "termux-fix-shebang"
-                    (shell-command-to-string "command -v termux-fix-shebang")))
-    'termux)
-   ((and (eq system-type 'windows-nt)
-         auto-dark-allow-powershell)
-    'powershell)
-   ((eq system-type 'windows-nt)
-    'winreg)
-   (t
-    (error "Could not determine a viable theme detection mechanism!"))))
+  (pcase system-type
+    ('darwin
+     (cond
+      ((and (or (fboundp 'ns-do-applescript)
+                (fboundp 'mac-do-applescript))
+            (or (eq window-system 'ns)
+                (eq window-system 'mac)))
+       'applescript)
+      (auto-dark-allow-osascript
+       'osascript)
+      (t "You are on a Darwin (Mac OS) system, but Emacs does not have AppleScript enabled and `auto-dark-allow-osascript` is nil.  Either rebuild Emacs with AppleScript support or set `auto-dark-allow-osascript` to t")))
+    ('gnu/linux
+     (if (member 'dbus features)
+         (cond
+          ((member "org.freedesktop.portal.Desktop" (dbus-list-activatable-names :session))
+           'dbus)
+          ((cl-search "termux-fix-shebang"
+                      (shell-command-to-string "command -v termux-fix-shebang"))
+           'termux)
+          (t (error "You are on a GNU/Linux system, but have neither an implementation of the XDG Desktop Portal’s “Background” interface available nor Termux installed.  Either install the packages needed for XDG Desktop Portal (at least the GNOME and KDE backends support Background) or Termux to use Auto-Dark")))
+       (error "Your Emacs is built without D-Bus integration, but it’s required for Auto-Dark to work on GNU/Linux systems")))
+    ('windows-nt
+     (if auto-dark-allow-powershell 'powershell 'winreg))
+    (unsupported-system
+     (error (concat "Auto-Dark detected your system as "
+                    (symbol-name unsupported-system)
+                    ", which isn’t currently supported.  If you would like support to be added, please open an issue at https://github.com/LionyxML/auto-dark-emacs/issues")))))
 
 ;;;###autoload
 (define-minor-mode auto-dark-mode
