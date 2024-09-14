@@ -5,7 +5,7 @@
 ;;         Vincent Zhang <seagle0128@gmail.com>
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
 ;; Created: July 16 2019
-;; Version: 0.12
+;; Version: 0.13
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
@@ -37,15 +37,65 @@
   :group 'tools
   :prefix "auto-dark-*")
 
+;; Dark & light themes need to be set together because enabling and disabling
+;; themes modifies `custom-enabled-themes', so if only one mode were expected to
+;; default to `custom-enabled-themes', it would use the wrong list of themes
+;; after the first time the other mode enables its themes.
+(defcustom auto-dark-themes nil
+  "The themes to enable for dark and light modes.
+The default is to use the themes in `custom-enabled-themes', but that only works
+if the themes are aware of `frame-background-mode', which many aren’t.
+
+If your themes aren’t aware of `frame-background-mode' (or you just prefer
+different themes for dark and light modes), you can set explicit lists of themes
+for each mode. Like with `custom-enabled-themes', the earlier themes in the list
+have higher precedence."
+  :group 'auto-dark
+  :type '(choice
+          (const :tag "Use custom-enabled-themes" nil)
+          (list :tag "Use distinct dark & light lists"
+                (repeat :tag "Dark" symbol)
+                (repeat :tag "Light" symbol))))
+
 (defcustom auto-dark-dark-theme 'wombat
-  "The theme to enable when dark-mode is active."
+  "The theme to enable when dark-mode is active.
+
+This variable is obsolete. You should set `auto-dark-themes' instead."
   :group 'auto-dark
   :type '(choice symbol (const nil)))
 
 (defcustom auto-dark-light-theme 'leuven
-  "The theme to enable when dark-mode is inactive."
+  "The theme to enable when dark-mode is inactive.
+
+This variable is obsolete. You should set `auto-dark-themes' instead."
   :group 'auto-dark
   :type '(choice symbol (const nil)))
+
+(make-obsolete-variable 'auto-dark-dark-theme 'auto-dark-themes "0.13")
+(make-obsolete-variable 'auto-dark-light-theme 'auto-dark-themes "0.13")
+
+(defun auto-dark--patch-theme-list (themes deprecated-theme)
+  "Support the deprecated ‘auto-dark-*-theme’ variables.
+If THEMES is non-nil, it’s simply returned. If ‘custom-enabled-themes’ isn’t
+set, a list containing only DEPRECATED-THEME is returned, otherwise nil.
+
+Once the deprecated variables are removed “(auto-dark--patch-theme-list a b)”
+can be replaced by “a”."
+  (or themes
+      (unless (and custom-enabled-themes
+                   (not (equal custom-enabled-themes
+                               (list auto-dark-dark-theme)))
+                   (not (equal custom-enabled-themes
+                               (list auto-dark-light-theme))))
+        (when deprecated-theme (list deprecated-theme)))))
+
+(defun auto-dark--dark-themes ()
+  "Return the set of themes to be used in dark mode."
+  (auto-dark--patch-theme-list (car auto-dark-themes) auto-dark-dark-theme))
+
+(defun auto-dark--light-themes ()
+  "Return the set of themes to be used in light mode."
+  (auto-dark--patch-theme-list (cadr auto-dark-themes) auto-dark-light-theme))
 
 (defcustom auto-dark-polling-interval-seconds 5
   "The number of seconds between which to poll for dark mode state.
@@ -183,24 +233,40 @@ already set the theme for the current dark mode state."
   (setq frame-background-mode appearance)
   (mapc #'frame-set-background-mode (frame-list)))
 
+(defun auto-dark--enable-themes (&optional themes)
+  "Re-enable THEMES, which defaults to ‘custom-enabled-themes’.
+This will load themes if necessary."
+  (interactive)
+  (let ((full-themes (remq 'user
+                           (delete-dups (or themes custom-enabled-themes)))))
+    ;; Disable only the themes we’re not going to re-enable.
+    (mapc (lambda (theme)
+            (unless (memq theme full-themes)
+              (disable-theme theme)))
+          custom-enabled-themes)
+    (let ((failures (mapcan (lambda (theme)
+                              (condition-case nil
+                                  ;; Enable instead of load when possible.
+                                  (if (custom-theme-p theme)
+                                      (enable-theme theme)
+                                    (load-theme theme))
+                                (:success nil)
+                                (error (list theme))))
+                            (reverse full-themes))))
+      (when failures
+        (warn "Failed to enable theme(s): %s"
+              (mapconcat #'symbol-name failures ", "))))))
+
 (defun auto-dark--set-theme (appearance)
   "Set light/dark theme Argument APPEARANCE should be light or dark."
-  (mapc #'disable-theme custom-enabled-themes)
   (setq auto-dark--last-dark-mode-state appearance)
+  (auto-dark--update-frame-backgrounds appearance)
   (pcase appearance
     ('dark
-     (when auto-dark-light-theme
-       (disable-theme auto-dark-light-theme))
-     (auto-dark--update-frame-backgrounds 'dark)
-     (when auto-dark-dark-theme
-       (load-theme auto-dark-dark-theme t))
+     (auto-dark--enable-themes (auto-dark--dark-themes))
      (run-hooks 'auto-dark-dark-mode-hook))
     ('light
-     (when auto-dark-dark-theme
-       (disable-theme auto-dark-dark-theme))
-     (auto-dark--update-frame-backgrounds 'light)
-     (when auto-dark-light-theme
-       (load-theme auto-dark-light-theme t))
+     (auto-dark--enable-themes (auto-dark--light-themes))
      (run-hooks 'auto-dark-light-mode-hook))))
 
 (defvar auto-dark--timer nil)
