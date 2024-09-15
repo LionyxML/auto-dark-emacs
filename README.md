@@ -82,6 +82,8 @@ enough:
 ;; In your config.el
 
 (after! doom-ui
+  (setq custom-safe-themes t) ;; https://github.com/LionyxML/auto-dark-emacs/issues/64
+
   ;; set your favorite themes
   (setq! auto-dark-themes '((doom-one) '(doom-one-light)))
   (auto-dark-mode))
