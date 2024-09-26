@@ -4,16 +4,18 @@
 ;;         Tim Harper <timcharper at gmail dot com>
 ;;         Vincent Zhang <seagle0128@gmail.com>
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
+;;         Greg Pfeil <greg@technomadic.org>
 ;; Created: July 16 2019
-;; Version: 0.13
+;; Version: 0.13.1
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
 ;; SPDX-License-Identifier: GPL-2.0-or-later
 
 ;;; Commentary:
-;; Auto-Dark is an auto-changer between 2 themes, dark/light, respecting the
-;; overall settings of MacOS, Linux and Windows.
+
+;; Auto-Dark is an auto-changer between 2 sets of themes, dark/light, respecting
+;; the overall settings of MacOS, Linux and Windows.
 ;; To enable it, install the package and add it to your load path:
 ;;
 ;;     (require 'auto-dark)
