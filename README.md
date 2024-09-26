@@ -72,8 +72,15 @@ built-in theme loading logic.
 ### Doom Emacs
 
 If you're under Doom Emacs, the following configuration should be
-enough:
+enough[^1]:
 
+[^1]: There is possibly an issue with Doom Emacs’ initialization, where the
+“Loading a theme can run Lisp code. Really load?” prompt can cause
+initialization to fail. Auto-Dark attempts to ensure that this prompt doesn’t
+occur during initialization, but it isn’t perfect. If this causes a problem for
+you, try setting `custom-safe-themes` to `t` in your config before setting
+`auto-dark-themes`. But be aware that this is a potential security concern. See
+the documentation of `custom-safe-themes` for more details.
 
 ```emacs-lisp
 ;; In your packages.el
@@ -82,10 +89,8 @@ enough:
 ;; In your config.el
 
 (after! doom-ui
-  (setq custom-safe-themes t) ;; https://github.com/LionyxML/auto-dark-emacs/issues/64
-
   ;; set your favorite themes
-  (setq! auto-dark-themes '((doom-one) '(doom-one-light)))
+  (setq! auto-dark-themes '((doom-one) (doom-one-light)))
   (auto-dark-mode))
 ```
 
@@ -179,6 +184,14 @@ Possible values for each sublist are themes installed on your system found by
 If this variable is `nil`, then the set of themes from `custom-enabled-themes`
 will be used for both dark and light mode. These themes must support
 `frame-background-mode`, or else there will be no visible change.
+
+
+**NB**: When adding themes to this list, switching between light and dark, or
+initializing Emacs, you may see a prompt like “Loading a theme can run Lisp
+code. Really load?” If you answer “yes” and allow Emacs to treat the theme as
+safe in future sessions, you should only see this prompt once per theme. To
+disable the prompt completely, you can set `custom-safe-themes` to `t` before
+setting `auto-dark-themes`.
 
 
 #### `auto-dark-polling-interval-seconds`

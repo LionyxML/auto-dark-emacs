@@ -4,16 +4,18 @@
 ;;         Tim Harper <timcharper at gmail dot com>
 ;;         Vincent Zhang <seagle0128@gmail.com>
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
+;;         Greg Pfeil <greg@technomadic.org>
 ;; Created: July 16 2019
-;; Version: 0.13
+;; Version: 0.13.1
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
 ;; SPDX-License-Identifier: GPL-2.0-or-later
 
 ;;; Commentary:
-;; Auto-Dark is an auto-changer between 2 themes, dark/light, respecting the
-;; overall settings of MacOS, Linux and Windows.
+
+;; Auto-Dark is an auto-changer between 2 sets of themes, dark/light, respecting
+;; the overall settings of MacOS, Linux and Windows.
 ;; To enable it, install the package and add it to your load path:
 ;;
 ;;     (require 'auto-dark)
@@ -49,13 +51,34 @@ if the themes are aware of `frame-background-mode', which many aren’t.
 If your themes aren’t aware of `frame-background-mode' (or you just prefer
 different themes for dark and light modes), you can set explicit lists of themes
 for each mode. Like with `custom-enabled-themes', the earlier themes in the list
-have higher precedence."
+have higher precedence.
+
+One other thing to be aware of is that when you first load a theme, you may be
+prompted to acknowledge that the theme can run arbitrary Lisp code.
+Acknowledging this and then allowing Emacs to treat the theme as safe in future
+sessions will silence the prompt (for that particular theme). If you would just
+prefer to ignore this warning for all themes, you can set ‘custom-safe-themes’
+to t."
   :group 'auto-dark
   :type '(choice
           (const :tag "Use custom-enabled-themes" nil)
           (list :tag "Use distinct dark & light lists"
                 (repeat :tag "Dark" symbol)
-                (repeat :tag "Light" symbol))))
+                (repeat :tag "Light" symbol)))
+  :set (lambda (_symbol value)
+         ;; Pre-load any themes used by Auto Dark (to force prompts for
+         ;; ‘custom-safe-themes’ while the user is interacting with Auto Dark,
+         ;; rather than at initialization or ‘frame-background-mode’ charge).
+         (mapc (lambda (mode-themes)
+                 (mapc (lambda (theme)
+                         (unless (custom-theme-p theme)
+                           (load-theme theme nil t)))
+                       mode-themes))
+               value)
+         ;; Make sure Auto Dark is showing the updated themes for the current
+         ;; ‘frame-background-mode’.
+         (auto-dark--check-and-set-dark-mode))
+  :version "0.13")
 
 (defcustom auto-dark-dark-theme 'wombat
   "The theme to enable when dark-mode is active.
@@ -89,13 +112,13 @@ can be replaced by “a”."
                                (list auto-dark-light-theme))))
         (when deprecated-theme (list deprecated-theme)))))
 
-(defun auto-dark--dark-themes ()
-  "Return the set of themes to be used in dark mode."
-  (auto-dark--patch-theme-list (car auto-dark-themes) auto-dark-dark-theme))
-
-(defun auto-dark--light-themes ()
-  "Return the set of themes to be used in light mode."
-  (auto-dark--patch-theme-list (cadr auto-dark-themes) auto-dark-light-theme))
+(defun auto-dark--themes-for-mode (mode)
+  "Return the set of themes to be used in MODE."
+  (pcase mode
+    ('dark (auto-dark--patch-theme-list (car auto-dark-themes)
+                                        auto-dark-dark-theme))
+    ('light (auto-dark--patch-theme-list (cadr auto-dark-themes)
+                                         auto-dark-light-theme))))
 
 (defcustom auto-dark-polling-interval-seconds 5
   "The number of seconds between which to poll for dark mode state.
@@ -225,7 +248,9 @@ In order to determine if dark theme is enabled."
 In order to prevent flickering, we only set the theme if we haven't
 already set the theme for the current dark mode state."
   (let ((appearance (if (auto-dark--is-dark-mode) 'dark 'light)))
-    (unless (eq appearance auto-dark--last-dark-mode-state)
+    (unless (and (eq appearance auto-dark--last-dark-mode-state)
+                 (equal custom-enabled-themes
+                        (auto-dark--themes-for-mode appearance)))
       (auto-dark--set-theme appearance))))
 
 (defun auto-dark--update-frame-backgrounds (appearance)
@@ -261,13 +286,10 @@ This will load themes if necessary."
   "Set light/dark theme Argument APPEARANCE should be light or dark."
   (setq auto-dark--last-dark-mode-state appearance)
   (auto-dark--update-frame-backgrounds appearance)
-  (pcase appearance
-    ('dark
-     (auto-dark--enable-themes (auto-dark--dark-themes))
-     (run-hooks 'auto-dark-dark-mode-hook))
-    ('light
-     (auto-dark--enable-themes (auto-dark--light-themes))
-     (run-hooks 'auto-dark-light-mode-hook))))
+  (auto-dark--enable-themes (auto-dark--themes-for-mode appearance))
+  (run-hooks (pcase appearance
+               ('dark 'auto-dark-dark-mode-hook)
+               ('light 'auto-dark-light-mode-hook))))
 
 (defvar auto-dark--timer nil)
 (defun auto-dark-start-timer ()
