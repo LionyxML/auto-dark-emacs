@@ -2,7 +2,7 @@
 
 
 [![MELPA](https://melpa.org/packages/auto-dark-badge.svg)](https://melpa.org/#/auto-dark)
-
+[![MELPA Stable](https://stable.melpa.org/packages/auto-dark-badge.svg)](https://stable.melpa.org/#/auto-dark)
 
 Do you want Emacs to follow your MacOS/Linux/Windows/Android dark-mode on/off
 options?
