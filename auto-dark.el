@@ -154,7 +154,8 @@ end tell")))
 
 (defun auto-dark--is-dark-mode-mac ()
   "Check if dark mode is enabled using `mac-do-applescript'."
-  (string-equal "\"true\"" (mac-do-applescript "tell application \"System Events\"
+  (string-equal "\"true\""
+                (mac-do-applescript "tell application \"System Events\"
         tell appearance preferences
                 if (dark mode) then
                         return \"true\"
@@ -168,7 +169,9 @@ end tell")))
 (defun auto-dark--is-dark-mode-osascript ()
   "Invoke applescript using Emacs using external shell command;
 this is less efficient, but works for non-GUI Emacs."
-  (string-equal "true" (string-trim (shell-command-to-string "osascript -e 'tell application \"System Events\" to tell appearance preferences to return dark mode'"))))
+  (string-equal "true"
+                (string-trim (shell-command-to-string
+                              "osascript -e 'tell application \"System Events\" to tell appearance preferences to return dark mode'"))))
 
 (defun auto-dark--is-dark-mode-dbus ()
   "Use Emacs built-in D-Bus function to determine if dark theme is enabled."
@@ -182,7 +185,9 @@ this is less efficient, but works for non-GUI Emacs."
 
 (defun auto-dark--is-dark-mode-powershell ()
   "Invoke powershell using Emacs using external shell command."
-  (string-equal "0" (string-trim (shell-command-to-string "powershell -noprofile -noninteractive \
+  (string-equal "0"
+                (string-trim (shell-command-to-string
+                              "powershell -noprofile -noninteractive \
 -nologo -ex bypass -command Get-ItemPropertyValue \
 HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
 -Name AppsUseLightTheme"))))
@@ -190,14 +195,18 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
 (defun auto-dark--is-dark-mode-winreg ()
   "Use Emacs built-in Windows Registry function.
 In order to determine if dark theme is enabled."
-  (eq 0 (w32-read-registry 'HKCU
-			   "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
-			   "AppsUseLightTheme")))
+  (eq 0
+      (w32-read-registry
+       'HKCU
+       "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
+       "AppsUseLightTheme")))
 
 (defun auto-dark--is-dark-mode-termux ()
-  "Use Termux way to determine if dark theme is enabled.  ref: https://github.com/termux/termux-api/issues/425."
+  "Use Termux way to determine if dark theme is enabled.
+ref: https://github.com/termux/termux-api/issues/425."
   (string-equal "Night mode: yes"
-                (shell-command-to-string "echo -n $(cmd uimode night 2>&1 </dev/null)")))
+                (shell-command-to-string
+                 "echo -n $(cmd uimode night 2>&1 </dev/null)")))
 
 (defvar auto-dark-dark-mode-hook nil
   "List of hooks to run after dark mode is loaded." )
@@ -274,7 +283,9 @@ This will load themes if necessary."
 (defun auto-dark-start-timer ()
   "Start auto-dark timer."
   (setq auto-dark--timer
-        (run-with-timer 0 auto-dark-polling-interval-seconds #'auto-dark--check-and-set-dark-mode)))
+        (run-with-timer 0
+                        auto-dark-polling-interval-seconds
+                        #'auto-dark--check-and-set-dark-mode)))
 
 (defun auto-dark-stop-timer ()
   "Stop auto-dark timer."
@@ -295,7 +306,10 @@ to change the theme."
          (lambda (path var val)
            (when (and (string= path "org.freedesktop.appearance")
                       (string= var "color-scheme"))
-             (auto-dark--set-theme (pcase (car val) (0 'light) (1 'dark) (2 'light))))))))
+             (auto-dark--set-theme (pcase (car val)
+                                     (0 'light)
+                                     (1 'dark)
+                                     (2 'light))))))))
 
 (defun auto-dark--unregister-dbus-listener ()
   "Unregister our callback function with D-Bus.
@@ -308,7 +322,8 @@ Remove theme change callback registered with D-Bus."
    ((auto-dark--use-ns-system-appearance)
     (add-hook 'ns-system-appearance-change-functions #'auto-dark--set-theme))
    ((auto-dark--use-mac-system-appearance)
-    (add-hook 'mac-effective-appearance-change-hook #'auto-dark--check-and-set-dark-mode))
+    (add-hook 'mac-effective-appearance-change-hook
+              #'auto-dark--check-and-set-dark-mode))
    ((auto-dark--use-dbus)
     (auto-dark--register-dbus-listener))
    (t (auto-dark-start-timer))))
@@ -319,7 +334,8 @@ Remove theme change callback registered with D-Bus."
    ((auto-dark--use-ns-system-appearance)
     (remove-hook 'ns-system-appearance-change-functions #'auto-dark--set-theme))
    ((auto-dark--use-mac-system-appearance)
-    (remove-hook 'mac-effective-appearance-change-hook #'auto-dark--check-and-set-dark-mode))
+    (remove-hook 'mac-effective-appearance-change-hook
+                 #'auto-dark--check-and-set-dark-mode))
    ((auto-dark--use-dbus)
     (auto-dark--unregister-dbus-listener))
    (t (auto-dark-stop-timer))))
@@ -342,8 +358,8 @@ Remove theme change callback registered with D-Bus."
    ((and (eq system-type 'darwin)
          (or (fboundp 'ns-do-applescript)
              (fboundp 'mac-do-applescript))
-		 (or (eq window-system 'ns)
-			 (eq window-system 'mac)))
+         (or (eq window-system 'ns)
+             (eq window-system 'mac)))
     'applescript)
    ((and (eq system-type 'darwin)
          auto-dark-allow-osascript)
@@ -375,7 +391,8 @@ Remove theme change callback registered with D-Bus."
   (if auto-dark-mode
       (progn
         (unless auto-dark-detection-method
-          (setq auto-dark-detection-method (auto-dark--determine-detection-method)))
+          (setq auto-dark-detection-method
+                (auto-dark--determine-detection-method)))
         (auto-dark--check-and-set-dark-mode)
         (auto-dark--register-change-listener))
     (auto-dark--unregister-change-listener)))
