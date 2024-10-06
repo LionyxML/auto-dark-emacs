@@ -104,7 +104,7 @@ Emacs must be restarted for this value to take effect."
   :group 'auto-dark
   :type 'integer)
 
-(defcustom auto-dark-allow-osascript nil
+(defcustom auto-dark-allow-osascript t
   "Whether to allow function `auto-dark-mode' to shell out to osascript:
 to check dark-mode state, if `ns-do-applescript' or `mac-do-applescript'
 is not available."
@@ -125,7 +125,7 @@ if left as such.  Only change this value if you know what you're
 doing!"
   :group 'auto-dark
   :type 'symbol
-  :options '(applescript osascript dbus powershell winreg termux))
+  :options '(applescript dbus powershell winreg termux))
 
 (defvar auto-dark--last-dark-mode-state 'unknown)
 
@@ -134,11 +134,11 @@ doing!"
 (defun auto-dark--is-dark-mode-applescript ()
   "Invoke AppleScript using Emacs built-in AppleScript support.
 In order to check if dark mode is enabled.  Return true if it is."
-  (if (fboundp 'ns-do-applescript)
-      (auto-dark--is-dark-mode-ns)
-    (if (fboundp 'mac-do-applescript)
-        (auto-dark--is-dark-mode-mac)
-      (error "No AppleScript support available in this Emacs build.  Try setting `auto-dark-allow-osascript` to t"))))
+  (cond
+   ((fboundp 'ns-do-applescript) (auto-dark--is-dark-mode-ns))
+   ((fboundp 'mac-do-applescript) (auto-dark--is-dark-mode-mac))
+   (auto-dark-allow-osascript (auto-dark--is-dark-mode-osascript))
+   (t (error "No AppleScript support available in this Emacs build.  Try setting `auto-dark-allow-osascript` to t"))))
 
 (defun auto-dark--is-dark-mode-ns ()
   "Check if dark mode is enabled using ns-do-applescript."
@@ -210,8 +210,6 @@ In order to determine if dark theme is enabled."
   (pcase auto-dark-detection-method
     ('applescript
      (auto-dark--is-dark-mode-applescript))
-    ('osascript
-     (auto-dark--is-dark-mode-osascript))
     ('dbus
      (auto-dark--is-dark-mode-dbus))
     ('powershell
@@ -339,15 +337,8 @@ Remove theme change callback registered with D-Bus."
 (defun auto-dark--determine-detection-method ()
   "Determine which theme detection method auto-dark should use."
   (cond
-   ((and (eq system-type 'darwin)
-         (or (fboundp 'ns-do-applescript)
-             (fboundp 'mac-do-applescript))
-		 (or (eq window-system 'ns)
-			 (eq window-system 'mac)))
+   ((eq system-type 'darwin)
     'applescript)
-   ((and (eq system-type 'darwin)
-         auto-dark-allow-osascript)
-    'osascript)
    ((and (eq system-type 'gnu/linux)
          (member 'dbus features)
          (member "org.freedesktop.portal.Desktop"
