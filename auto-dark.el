@@ -38,19 +38,16 @@
   :group 'tools
   :prefix "auto-dark-*")
 
-(defcustom auto-dark-dark-theme 'wombat
-  "The theme to enable when dark-mode is active.
-
-This variable is obsolete. You should set `auto-dark-themes' instead."
-  :group 'auto-dark
-  :type '(choice symbol (const nil)))
-
-(defcustom auto-dark-light-theme 'leuven
-  "The theme to enable when dark-mode is inactive.
-
-This variable is obsolete. You should set `auto-dark-themes' instead."
-  :group 'auto-dark
-  :type '(choice symbol (const nil)))
+(defun auto-dark--initialize-after-init (&optional initialize-fn)
+  "Return a function suitable for passing to `defcustom'’s :initialize parameter.
+The returned function defers initialization to `after-init-hook'. INITIALIZE-FN
+is the function that should be used to eventually initialize the symbol. It
+defaults to `custom-initialize-reset', as does :initialize itself."
+  (let ((init-fn (or initialize-fn #'custom-initialize-reset)))
+    (lambda (symbol exp)
+      (if after-init-time
+          (funcall init-fn symbol exp)
+        (add-hook 'after-init-hook (lambda () (funcall init-fn symbol exp)))))))
 
 (make-obsolete-variable 'auto-dark-dark-theme 'auto-dark-themes "0.13")
 (make-obsolete-variable 'auto-dark-light-theme 'auto-dark-themes "0.13")
@@ -199,15 +196,25 @@ It can be dark, light, or nil."
              :warning
              "couldn’t determine current system appearance")))
 
+(defun auto-dark--initialized-p ()
+  "Check whether initialization is far enough along to change themes."
+  (and (boundp 'auto-dark-themes)
+       (or auto-dark-themes
+           (and (boundp 'auto-dark-dark-theme)
+                (boundp 'auto-dark-light-theme)))))
+
 (defun auto-dark--check-and-set-dark-mode ()
   "Set the theme according to the OS's dark mode state.
 In order to prevent flickering, we only set the theme if we haven't
 already set the theme for the current dark mode state."
-  (let ((appearance (auto-dark--current-system-mode)))
-    (unless (and (eq appearance auto-dark--last-dark-mode-state)
-                 (equal custom-enabled-themes
-                        (auto-dark--themes-for-mode appearance)))
-      (auto-dark--set-theme appearance))))
+  ;; This can be called during custom variable initialization, so ensure we only
+  ;; do it once we’re certain initialization is far enough along.
+  (when (auto-dark--initialized-p)
+    (let ((appearance (auto-dark--current-system-mode)))
+      (unless (and (eq appearance auto-dark--last-dark-mode-state)
+                   (equal custom-enabled-themes
+                          (auto-dark--themes-for-mode appearance)))
+        (auto-dark--set-theme appearance)))))
 
 (defun auto-dark--update-frame-backgrounds (appearance)
   "Set the `frame-background-mode' for all frames to APPEARANCE."
@@ -253,12 +260,15 @@ time."
 
 (defun auto-dark--set-theme (appearance)
   "Set light/dark theme Argument APPEARANCE should be light or dark."
-  (setq auto-dark--last-dark-mode-state appearance)
-  (auto-dark--update-frame-backgrounds appearance)
-  (auto-dark--enable-themes (auto-dark--themes-for-mode appearance))
-  (run-hooks (pcase appearance
-               ('dark 'auto-dark-dark-mode-hook)
-               ('light 'auto-dark-light-mode-hook))))
+  ;; This can be called during custom variable initialization, so ensure we only
+  ;; do it once we’re certain initialization is far enough along.
+  (when (auto-dark--initialized-p)
+    (setq auto-dark--last-dark-mode-state appearance)
+    (auto-dark--update-frame-backgrounds appearance)
+    (auto-dark--enable-themes (auto-dark--themes-for-mode appearance))
+    (run-hooks (pcase appearance
+                 ('dark 'auto-dark-dark-mode-hook)
+                 ('light 'auto-dark-light-mode-hook)))))
 
 (defvar auto-dark--timer nil)
 (defun auto-dark-start-timer ()
@@ -376,6 +386,38 @@ modes."))))
         (auto-dark--check-and-set-dark-mode)
         (auto-dark--register-change-listener))
     (auto-dark--unregister-change-listener)))
+
+(defun auto-dark--set-individual-theme-var (symbol theme)
+  "Pre-load THEME and assign it to SYMBOL.
+This also updates Auto-Dark’s state as necessary."
+  ;; Pre-load this theme (to force prompts for ‘custom-safe-themes’ while
+  ;; the user is interacting with Auto Dark, rather than at
+  ;; initialization or ‘frame-background-mode’ charge).
+  (when (and theme (not (custom-theme-p theme)))
+    (load-theme theme nil t))
+  (set-default symbol theme)
+  (when auto-dark-mode
+    ;; Make sure Auto Dark is showing the updated themes for the current
+    ;; ‘frame-background-mode’.
+    (auto-dark--check-and-set-dark-mode)))
+
+(defcustom auto-dark-dark-theme 'wombat
+  "The theme to enable when dark-mode is active.
+
+This variable is obsolete. You should set `auto-dark-themes' instead."
+  :group 'auto-dark
+  :type '(choice symbol (const nil))
+  :initialize (auto-dark--initialize-after-init)
+  :set #'auto-dark--set-individual-theme-var)
+
+(defcustom auto-dark-light-theme 'leuven
+  "The theme to enable when dark-mode is inactive.
+
+This variable is obsolete. You should set `auto-dark-themes' instead."
+  :group 'auto-dark
+  :type '(choice symbol (const nil))
+  :initialize (auto-dark--initialize-after-init)
+  :set #'auto-dark--set-individual-theme-var)
 
 ;; Dark & light themes need to be set together because enabling and disabling
 ;; themes modifies `custom-enabled-themes', so if only one mode were expected to

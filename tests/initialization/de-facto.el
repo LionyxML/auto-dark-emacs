@@ -52,8 +52,10 @@
       (expect (boundp 'auto-dark-detection-method) :to-be-truthy)
       (expect auto-dark-polling-interval-seconds :to-be 5)
       (expect auto-dark-themes :to-be nil)
-      (expect auto-dark-dark-theme :to-be 'wombat)
-      (expect auto-dark-light-theme :to-be 'leuven)))
+      ;; These two are handled specially – they aren’t set to their defaults
+      ;; until after initialization.
+      (expect (boundp 'auto-dark-dark-theme) :to-be nil)
+      (expect (boundp 'auto-dark-light-theme) :to-be nil)))
 
   (describe "after variables are set"
     (before-all
@@ -62,8 +64,9 @@
 
     (it "should have configured Auto-Dark"
       (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light)))
-      (expect auto-dark-dark-theme :to-be 'wombat)
-      (expect auto-dark-light-theme :to-be 'leuven))
+      ;; And these are still unbound.
+      (expect (boundp 'auto-dark-dark-theme) :to-be nil)
+      (expect (boundp 'auto-dark-light-theme) :to-be nil))
 
     (it "should have enabled the correct themes"
       (expect custom-enabled-themes :to-be-in '((tsdh-dark) (tsdh-light))))))
