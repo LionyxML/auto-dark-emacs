@@ -1,0 +1,13 @@
+;;; Eldev --- Build configuration -*- mode: emacs-lisp; lexical-binding: t; -*-
+
+(require 'eldev)
+(require 'elisp-lint)
+
+(setq
+ ;; run all linters by default
+ eldev-lint-default t
+ ;; ignore lisp files in the example directory
+ eldev-standard-excludes `(:or ,eldev-standard-excludes "./example")
+ ;; and disable the ‘elisp-lint’ validators that are already covered by
+ ;; ‘eldev-lint’ (see ‘eldev-linter-elisp’).
+ elisp-lint-ignored-validators '("checkdoc" "package-lint"))

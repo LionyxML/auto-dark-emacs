@@ -1,0 +1,13 @@
+{
+    "builds": {
+        "exclude": [
+            "*.x86_64-darwin",
+            "*.x86_64-darwin.*",
+            "homeConfigurations.x86_64-darwin-example"
+        ],
+        "include": [
+            "*.*",
+            "*.*.*"
+        ]
+    }
+}
