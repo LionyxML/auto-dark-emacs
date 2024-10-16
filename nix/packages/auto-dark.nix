@@ -46,7 +46,7 @@ in
 
       ## Need `--external` here so that we don’t try to download any
       ## package archives (which would break the sandbox).
-      eldev --external test
+      eldev --external test --test-type=main
 
       runHook postCheck
     '';
@@ -56,13 +56,25 @@ in
     installCheckPhase = ''
       runHook preInstallCheck
 
+      init_tests=($(IFS=$'\n' find ./tests/initialization -type f -name '*.el'))
+      # This tries to make sure we don’t have a bug that skips the tests.
+      if (( ''${#init_tests[@]} == 0 )); then
+        echo "didn’t find initialization tests" >2
+        exit 1
+      else
+        for file in "''${init_tests[@]}"; do
+          echo "testing $file"
+          eldev --external test --test-type=integration -f "$file"
+        done
+      fi
+
       ## TODO: Currently needed to make a temp file in
       ##      `eldev--create-internal-pseudoarchive-descriptor`.
       HOME="$(mktemp --directory --tmpdir fake-home.XXXXXX)"
 
       ## Need `--external` here so that we don’t try to download any
       ## package archives (which would break the sandbox).
-      eldev --external --packaged test
+      eldev --external --packaged test --test-type=main
 
       runHook postInstallCheck
     '';
