@@ -1,4 +1,4 @@
-;;; auto-dark.el --- Automatically sets the dark-mode theme based on macOS/Linux/Windows status -*- lexical-binding: t; -*-
+;;; auto-dark.el --- Automatically set the dark-mode theme based on system status -*- lexical-binding: t; -*-
 
 ;; Author: Rahul M. Juliato
 ;;         Tim Harper <timcharper at gmail dot com>
@@ -141,8 +141,11 @@ In order to check if dark mode is enabled.  Return true if it is."
       (error "No AppleScript support available in this Emacs build.  Try setting `auto-dark-allow-osascript` to t"))))
 
 (defun auto-dark--is-dark-mode-ns ()
-  "Check if dark mode is enabled using ns-do-applescript."
-  (string-equal "true" (ns-do-applescript "tell application \"System Events\"
+  "Check if dark mode is enabled using `ns-do-applescript'."
+  ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
+  ;;        setting the detection method.
+  (when (fboundp 'ns-do-applescript)
+    (string-equal "true" (ns-do-applescript "tell application \"System Events\"
         tell appearance preferences
                 if (dark mode) then
                         return \"true\"
@@ -150,11 +153,14 @@ In order to check if dark mode is enabled.  Return true if it is."
                         return \"false\"
                 end if
         end tell
-end tell")))
+end tell"))))
 
 (defun auto-dark--is-dark-mode-mac ()
   "Check if dark mode is enabled using `mac-do-applescript'."
-  (string-equal "\"true\"" (mac-do-applescript "tell application \"System Events\"
+  ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
+  ;;        setting the detection method.
+  (when (fboundp 'mac-do-applescript)
+    (string-equal "\"true\"" (mac-do-applescript "tell application \"System Events\"
         tell appearance preferences
                 if (dark mode) then
                         return \"true\"
@@ -162,7 +168,7 @@ end tell")))
                         return \"false\"
                 end if
         end tell
-end tell")))
+end tell"))))
 
 
 (defun auto-dark--is-dark-mode-osascript ()
@@ -190,9 +196,12 @@ HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
 (defun auto-dark--is-dark-mode-winreg ()
   "Use Emacs built-in Windows Registry function.
 In order to determine if dark theme is enabled."
-  (eq 0 (w32-read-registry 'HKCU
-			   "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
-			   "AppsUseLightTheme")))
+  ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
+  ;;        setting the detection method.
+  (when (fboundp 'w32-read-registry)
+    (eq 0 (w32-read-registry 'HKCU
+                             "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
+                             "AppsUseLightTheme"))))
 
 (defun auto-dark--is-dark-mode-termux ()
   "Use Termux way to determine if dark theme is enabled.  ref: https://github.com/termux/termux-api/issues/425."
@@ -342,8 +351,8 @@ Remove theme change callback registered with D-Bus."
    ((and (eq system-type 'darwin)
          (or (fboundp 'ns-do-applescript)
              (fboundp 'mac-do-applescript))
-		 (or (eq window-system 'ns)
-			 (eq window-system 'mac)))
+         (or (eq window-system 'ns)
+             (eq window-system 'mac)))
     'applescript)
    ((and (eq system-type 'darwin)
          auto-dark-allow-osascript)
