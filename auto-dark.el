@@ -238,6 +238,19 @@ This will load themes if necessary."
         (warn "Failed to enable theme(s): %s"
               (mapconcat #'symbol-name failures ", "))))))
 
+(defun auto-dark-toggle-appearance ()
+  "Switch between light and dark mode.
+If `auto-dark-detection-method' is nil, this will persist until the next time
+this is called. Otherwise, it could switch to the system appearance at any
+time."
+  (interactive)
+  (auto-dark--set-theme (if (eq auto-dark--last-dark-mode-state 'dark)
+                            'light
+                          ;; NB: This does _something_ even if we don’t know
+                          ;;     what the previous state was, since the user
+                          ;;     explicitly requested a change.
+                          'dark)))
+
 (defun auto-dark--set-theme (appearance)
   "Set light/dark theme Argument APPEARANCE should be light or dark."
   (setq auto-dark--last-dark-mode-state appearance)
@@ -346,7 +359,9 @@ Remove theme change callback registered with D-Bus."
    ((eq system-type 'windows-nt)
     'winreg)
    (t
-    (error "Could not determine a viable theme detection mechanism!"))))
+    (lwarn 'auto-dark :error "Could not determine a viable theme detection \
+mechanism! You can use ‘auto-dark-toggle-appearance’ to manually switch between \
+modes."))))
 
 ;;;###autoload
 (define-minor-mode auto-dark-mode

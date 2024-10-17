@@ -42,6 +42,16 @@
     (expect auto-dark-themes :to-equal '((wombat) (leuven)))
     (expect custom-enabled-themes :to-equal '(leuven))))
 
+(describe "toggling"
+  (before-each
+    (auto-dark-toggle-appearance))
+  (it "should invert the current appearance"
+    (expect custom-enabled-themes :to-equal '(wombat)))
+  (it "should invert the current appearance again"
+    (expect custom-enabled-themes :to-equal '(leuven)))
+  (it "should invert the current appearance and again"
+    (expect custom-enabled-themes :to-equal '(wombat))))
+
 ;; Restore the original state
 (unless auto-dark-tests--original-state
   (auto-dark-mode -1))
