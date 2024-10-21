@@ -234,6 +234,18 @@ already set the theme for the current dark mode state."
   (setq frame-background-mode appearance)
   (mapc #'frame-set-background-mode (frame-list)))
 
+(defmacro auto-dark--enable-theme (theme-exp)
+  "Inline `enable-theme' on THEME-EXP.
+Doom Emacs requires `load-theme' to be used instead of `enable-theme' for it to
+keep themes in sync (see doomemacs/doomemacs#8119). This expands to `load-theme'
+when necessary."
+  (if (boundp 'doom-version)
+      ;; We should only get here if the theme has already been loaded, so we
+      ;; avoid confirmation. However, this is still a loophole if the theme has
+      ;; changed since the last time it was loaded.
+      `(load-theme ,theme-exp t)
+    `(enable-theme ,theme-exp)))
+
 (defun auto-dark--enable-themes (&optional themes)
   "Re-enable THEMES, which defaults to ‘custom-enabled-themes’.
 This will load themes if necessary."
@@ -249,7 +261,7 @@ This will load themes if necessary."
                               (condition-case nil
                                   ;; Enable instead of load when possible.
                                   (if (custom-theme-p theme)
-                                      (enable-theme theme)
+                                      (auto-dark--enable-theme theme)
                                     (load-theme theme))
                                 (:success nil)
                                 (error (list theme))))
