@@ -4,6 +4,10 @@
 [![MELPA](https://melpa.org/packages/auto-dark-badge.svg)](https://melpa.org/#/auto-dark)
 [![MELPA Stable](https://stable.melpa.org/packages/auto-dark-badge.svg)](https://stable.melpa.org/#/auto-dark)
 
+[![built with garnix](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2FLionyxML%2Fauto-dark-emacs%3Fbranch%3Ddevelopment)](https://garnix.io/repo/LionyxML/auto-dark-emacs)(dev)
+
+[![built with garnix](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2FLionyxML%2Fauto-dark-emacs)](https://garnix.io/repo/LionyxML/auto-dark-emacs)(master)
+
 Do you want Emacs to follow your MacOS/Linux/Windows/Android dark-mode on/off
 options?
 
