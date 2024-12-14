@@ -488,7 +488,8 @@ theme list."
                                      (not (equal custom-enabled-themes
                                                  (list auto-dark-light-theme))))
                                 '(() ())
-                              (list (list auto-dark-dark-theme) (list auto-dark-light-theme))))))
+                              (list (list auto-dark-dark-theme)
+                                    (list auto-dark-light-theme))))))
     ;; TODO: Once `auto-dark-dark-theme' and `auto-dark-light-theme' are
     ;;       removed, the function can be reduced to this form.
     (pcase mode
@@ -496,5 +497,4 @@ theme list."
       ('light (cadr patched-themes)))))
 
 (provide 'auto-dark)
-
 ;;; auto-dark.el ends here
