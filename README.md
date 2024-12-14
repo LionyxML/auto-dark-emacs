@@ -2,7 +2,11 @@
 
 
 [![MELPA](https://melpa.org/packages/auto-dark-badge.svg)](https://melpa.org/#/auto-dark)
+[![MELPA Stable](https://stable.melpa.org/packages/auto-dark-badge.svg)](https://stable.melpa.org/#/auto-dark)
 
+[![built with garnix](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2FLionyxML%2Fauto-dark-emacs%3Fbranch%3Ddevelopment)](https://garnix.io/repo/LionyxML/auto-dark-emacs)(dev)
+
+[![built with garnix](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2FLionyxML%2Fauto-dark-emacs)](https://garnix.io/repo/LionyxML/auto-dark-emacs)(master)
 
 Do you want Emacs to follow your MacOS/Linux/Windows/Android dark-mode on/off
 options?
@@ -28,7 +32,7 @@ Install it from [MELPA](https://melpa.org/#/auto-dark) and add to your
 
 ```emacs-lisp
 (require 'auto-dark)
-(auto-dark-mode t)
+(auto-dark-mode)
 ```
 
 
@@ -40,7 +44,7 @@ and then add the following to your `.emacs`:
 ```emacs-lisp
 (add-to-list 'load-path "~/.emacs.d/auto-dark/")
 (require 'auto-dark)
-(auto-dark-mode t)
+(auto-dark-mode)
 ```
 
 Or use `use-package` to install:
@@ -48,7 +52,7 @@ Or use `use-package` to install:
 
 ```emacs-lisp
 (use-package auto-dark
-  :config (auto-dark-mode t))
+  :init (auto-dark-mode))
 ```
 
 
@@ -61,7 +65,7 @@ If you use Spacemacs, add `(auto-dark)` to the
 
 ```emacs-lisp
 (use-package auto-dark
-  :init (spacemacs/defer-until-after-user-config (lambda () (auto-dark-mode t)))
+  :init (spacemacs/defer-until-after-user-config #'auto-dark-mode)
   :defer t)
 ```
 
@@ -72,8 +76,15 @@ built-in theme loading logic.
 ### Doom Emacs
 
 If you're under Doom Emacs, the following configuration should be
-enough:
+enough[^1]:
 
+[^1]: There is possibly an issue with Doom Emacs’ initialization, where the
+“Loading a theme can run Lisp code. Really load?” prompt can cause
+initialization to fail. Auto-Dark attempts to ensure that this prompt doesn’t
+occur during initialization, but it isn’t perfect. If this causes a problem for
+you, try setting `custom-safe-themes` to `t` in your config before setting
+`auto-dark-themes`. But be aware that this is a potential security concern. See
+the documentation of `custom-safe-themes` for more details.
 
 ```emacs-lisp
 ;; In your packages.el
@@ -83,16 +94,15 @@ enough:
 
 (after! doom-ui
   ;; set your favorite themes
-  (setq! auto-dark-dark-theme 'doom-one
-        auto-dark-light-theme 'doom-one-light)
-  (auto-dark-mode 1))
+  (setq! auto-dark-themes '((doom-one) (doom-one-light)))
+  (auto-dark-mode))
 ```
 
 
 ## Notes for MacOS users
 
 From the box, this package takes advantage of some built-in functionality found
-on the formulaes [Emacs Plus](https://github.com/d12frosted/homebrew-emacs-plus) 
+on the formulaes [Emacs Plus](https://github.com/d12frosted/homebrew-emacs-plus)
 and [Emacs Mac](https://github.com/railwaycat/homebrew-emacsmacport?tab=readme-ov-file)
 to make detecting switches faster.
 
@@ -116,7 +126,7 @@ by going to:
 
 
 ```
-Settings -> Privacy & Security -> Emacs -> System Events 
+Settings -> Privacy & Security -> Emacs -> System Events
 ```
 
 
@@ -142,47 +152,50 @@ Following, a complete configuration with all settings set to its defaults:
 ```emacs-lisp
 (use-package auto-dark
   :ensure t
-  :config 
-  (setq auto-dark-dark-theme 'wombat)
-  (setq auto-dark-light-theme 'leuven)
-  (setq auto-dark-polling-interval-seconds 5)
-  (setq auto-dark-allow-osascript nil)
-  (setq auto-dark-allow-powershell nil)
-  ;; (setq auto-dark-detection-method nil) ;; dangerous to be set manually
-
-  (add-hook 'auto-dark-dark-mode-hook
-    (lambda ()
-      ;; something to execute when dark mode is detected))
-
-  (add-hook 'auto-dark-light-mode-hook
-    (lambda ()
-      ;; something to execute when light mode is detected))
-
-  (auto-dark-mode t))
+  :custom
+  (auto-dark-themes '((wombat) (leuven)))
+  (auto-dark-polling-interval-seconds 5)
+  (auto-dark-allow-osascript nil)
+  (auto-dark-allow-powershell nil)
+  ;; (auto-dark-detection-method nil) ;; dangerous to be set manually
+  :hook
+  (auto-dark-dark-mode
+   . (lambda ()
+        ;; something to execute when dark mode is detected
+        ))
+  (auto-dark-light-mode
+   . (lambda ()
+        ;; something to execute when light mode is detected
+        ))
+  :init (auto-dark-mode))
 ```
 
 
 A short description of each setting:
 
 
-#### `auto-dark-dark-theme`
+#### `auto-dark-themes`
 
-The theme to enable when dark-mode is active.
-
-
-Possible values are themes installed on your system found by
-`customize-themes` or `nil` to use Emacs with no themes (default
-appearance).
+A list containing two elements. The first is the list of themes to enable when
+dark-mode is active and the second is the list of themes to enable when
+dark-mode is inactive.
 
 
-#### `auto-dark-light-theme`
+Possible values for each sublist are themes installed on your system found by
+`customize-themes` or `nil` to use Emacs with no themes (default appearance).
 
-The theme to enable when dark-mode is inactive.
+
+If this variable is `nil`, then the set of themes from `custom-enabled-themes`
+will be used for both dark and light mode. These themes must support
+`frame-background-mode`, or else there will be no visible change.
 
 
-Possible values are themes installed on your system found by
-`customize-themes` or `nil` to use Emacs with no themes (default
-appearance).
+**NB**: When adding themes to this list, switching between light and dark, or
+initializing Emacs, you may see a prompt like “Loading a theme can run Lisp
+code. Really load?” If you answer “yes” and allow Emacs to treat the theme as
+safe in future sessions, you should only see this prompt once per theme. To
+disable the prompt completely, you can set `custom-safe-themes` to `t` before
+setting `auto-dark-themes`.
 
 
 #### `auto-dark-polling-interval-seconds`
@@ -261,4 +274,3 @@ This package in action:
 - Linux (Gnome DE)
 
 ![auto-dark-emacs in action - linux gnome](images/demo_gnome.gif)
-
