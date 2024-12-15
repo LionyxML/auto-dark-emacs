@@ -94,41 +94,51 @@ In order to check if dark mode is enabled.  Return true if it is."
         (if (auto-dark--is-dark-mode-mac) 'dark 'light)
       (error "No AppleScript support available in this Emacs build.  Try setting `auto-dark-allow-osascript` to t"))))
 
+(defconst auto-dark--is-dark-mode-applescript
+  "tell application \"System Events\" to tell appearance preferences to return dark mode"
+  "This is AppleScript code that returns an AppleScript boolean value.
+It is “true” if the system is in dark mode, and “false” otherwise.")
+
+(defun auto-dark--handle-system-events-access (pattern err)
+  "Convert an ERR matching PATTERN into a warning about System Events access."
+  (if (equal pattern (cdr err))
+      (lwarn 'auto-dark
+             :warning
+             "Failed to get the mode from System Events. Please see the README \
+(https://github.com/LionyxML/auto-dark-emacs?tab=readme-ov-file#notes-for-macos-users) \
+for possible solutions")
+    (signal (car err) (cdr err))))
+
 (defun auto-dark--is-dark-mode-ns ()
   "Check if dark mode is enabled using `ns-do-applescript'."
   ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
   ;;        setting the detection method.
   (when (fboundp 'ns-do-applescript)
-    (string-equal "true" (ns-do-applescript "tell application \"System Events\"
-        tell appearance preferences
-                if (dark mode) then
-                        return \"true\"
-                else
-                        return \"false\"
-                end if
-        end tell
-end tell"))))
+    (condition-case err
+        ;; `ns-do-applescript' doesn’t support booleans, so we convert to an
+        ;; integer.
+        (/= 0
+            (ns-do-applescript (concat auto-dark--is-dark-mode-applescript
+                                       " as integer")))
+      (error
+       (auto-dark--handle-system-events-access '("AppleScript error 1") err)))))
 
 (defun auto-dark--is-dark-mode-mac ()
   "Check if dark mode is enabled using `mac-do-applescript'."
   ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
   ;;        setting the detection method.
   (when (fboundp 'mac-do-applescript)
-    (string-equal "\"true\"" (mac-do-applescript "tell application \"System Events\"
-        tell appearance preferences
-                if (dark mode) then
-                        return \"true\"
-                else
-                        return \"false\"
-                end if
-        end tell
-end tell"))))
-
+    (condition-case err
+        (string-equal "true"
+                      (mac-do-applescript auto-dark--is-dark-mode-applescript))
+      (error
+       (auto-dark--handle-system-events-access '("AppleScript error 1") err)))))
 
 (defun auto-dark--is-dark-mode-osascript ()
-  "Invoke applescript using Emacs using external shell command;
+  "Invoke AppleScript using Emacs using external shell command;
 this is less efficient, but works for non-GUI Emacs."
-  (string-equal "true" (string-trim (shell-command-to-string "osascript -e 'tell application \"System Events\" to tell appearance preferences to return dark mode'"))))
+  (equal '("true")
+         (process-lines "osascript" "-e" auto-dark--is-dark-mode-applescript)))
 
 (defun auto-dark--current-mode-dbus ()
   "Use Emacs built-in D-Bus function to determine if dark theme is enabled."
@@ -145,7 +155,9 @@ this is less efficient, but works for non-GUI Emacs."
 
 (defun auto-dark--is-dark-mode-powershell ()
   "Invoke powershell using Emacs using external shell command."
-  (string-equal "0" (string-trim (shell-command-to-string "powershell -noprofile -noninteractive \
+  (string-equal "0"
+                (string-trim (shell-command-to-string
+                              "powershell -noprofile -noninteractive \
 -nologo -ex bypass -command Get-ItemPropertyValue \
 HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
 -Name AppsUseLightTheme"))))
@@ -156,14 +168,18 @@ In order to determine if dark theme is enabled."
   ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
   ;;        setting the detection method.
   (when (fboundp 'w32-read-registry)
-    (eq 0 (w32-read-registry 'HKCU
-                             "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
-                             "AppsUseLightTheme"))))
+    (eq 0
+        (w32-read-registry
+         'HKCU
+         "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
+         "AppsUseLightTheme"))))
 
 (defun auto-dark--is-dark-mode-termux ()
-  "Use Termux way to determine if dark theme is enabled.  ref: https://github.com/termux/termux-api/issues/425."
+  "Use Termux way to determine if dark theme is enabled.
+ref: https://github.com/termux/termux-api/issues/425."
   (string-equal "Night mode: yes"
-                (shell-command-to-string "echo -n $(cmd uimode night 2>&1 </dev/null)")))
+                (shell-command-to-string
+                 "echo -n $(cmd uimode night 2>&1 </dev/null)")))
 
 (defvar auto-dark-dark-mode-hook nil
   "List of hooks to run after dark mode is loaded." )
@@ -274,7 +290,9 @@ time."
 (defun auto-dark-start-timer ()
   "Start auto-dark timer."
   (setq auto-dark--timer
-        (run-with-timer 0 auto-dark-polling-interval-seconds #'auto-dark--check-and-set-dark-mode)))
+        (run-with-timer 0
+                        auto-dark-polling-interval-seconds
+                        #'auto-dark--check-and-set-dark-mode)))
 
 (defun auto-dark-stop-timer ()
   "Stop auto-dark timer."
@@ -313,7 +331,8 @@ Remove theme change callback registered with D-Bus."
    ((auto-dark--use-ns-system-appearance)
     (add-hook 'ns-system-appearance-change-functions #'auto-dark--set-theme))
    ((auto-dark--use-mac-system-appearance)
-    (add-hook 'mac-effective-appearance-change-hook #'auto-dark--check-and-set-dark-mode))
+    (add-hook 'mac-effective-appearance-change-hook
+              #'auto-dark--check-and-set-dark-mode))
    ((auto-dark--use-dbus)
     (auto-dark--register-dbus-listener))
    (t (auto-dark-start-timer))))
@@ -324,7 +343,8 @@ Remove theme change callback registered with D-Bus."
    ((auto-dark--use-ns-system-appearance)
     (remove-hook 'ns-system-appearance-change-functions #'auto-dark--set-theme))
    ((auto-dark--use-mac-system-appearance)
-    (remove-hook 'mac-effective-appearance-change-hook #'auto-dark--check-and-set-dark-mode))
+    (remove-hook 'mac-effective-appearance-change-hook
+                 #'auto-dark--check-and-set-dark-mode))
    ((auto-dark--use-dbus)
     (auto-dark--unregister-dbus-listener))
    (t (auto-dark-stop-timer))))
@@ -382,7 +402,8 @@ modes."))))
   (if auto-dark-mode
       (progn
         (unless auto-dark-detection-method
-          (setq auto-dark-detection-method (auto-dark--determine-detection-method)))
+          (setq auto-dark-detection-method
+                (auto-dark--determine-detection-method)))
         (auto-dark--check-and-set-dark-mode)
         (auto-dark--register-change-listener))
     (auto-dark--unregister-change-listener)))
@@ -474,7 +495,8 @@ theme list."
                                      (not (equal custom-enabled-themes
                                                  (list auto-dark-light-theme))))
                                 '(() ())
-                              (list (list auto-dark-dark-theme) (list auto-dark-light-theme))))))
+                              (list (list auto-dark-dark-theme)
+                                    (list auto-dark-light-theme))))))
     ;; TODO: Once `auto-dark-dark-theme' and `auto-dark-light-theme' are
     ;;       removed, the function can be reduced to this form.
     (pcase mode
@@ -482,5 +504,4 @@ theme list."
       ('light (cadr patched-themes)))))
 
 (provide 'auto-dark)
-
 ;;; auto-dark.el ends here
