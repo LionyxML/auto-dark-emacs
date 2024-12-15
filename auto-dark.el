@@ -99,24 +99,40 @@ In order to check if dark mode is enabled.  Return true if it is."
   "This is AppleScript code that returns an AppleScript boolean value.
 It is “true” if the system is in dark mode, and “false” otherwise.")
 
+(defun auto-dark--handle-system-events-access (pattern err)
+  "Convert an ERR matching PATTERN into a warning about System Events access."
+  (if (equal pattern (cdr err))
+      (lwarn 'auto-dark
+             :warning
+             "Failed to get the mode from System Events. Please see the README \
+(https://github.com/LionyxML/auto-dark-emacs?tab=readme-ov-file#notes-for-macos-users) \
+for possible solutions")
+    (signal (car err) (cdr err))))
+
 (defun auto-dark--is-dark-mode-ns ()
   "Check if dark mode is enabled using `ns-do-applescript'."
   ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
   ;;        setting the detection method.
   (when (fboundp 'ns-do-applescript)
-    ;; `ns-do-applescript' doesn’t support booleans, so we convert to an
-    ;; integer.
-    (/= 0
-        (ns-do-applescript (concat auto-dark--is-dark-mode-applescript
-                                   " as integer")))))
+    (condition-case err
+        ;; `ns-do-applescript' doesn’t support booleans, so we convert to an
+        ;; integer.
+        (/= 0
+            (ns-do-applescript (concat auto-dark--is-dark-mode-applescript
+                                       " as integer")))
+      (error
+       (auto-dark--handle-system-events-access '("AppleScript error 1") err)))))
 
 (defun auto-dark--is-dark-mode-mac ()
   "Check if dark mode is enabled using `mac-do-applescript'."
   ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
   ;;        setting the detection method.
   (when (fboundp 'mac-do-applescript)
-    (string-equal "true"
-                  (mac-do-applescript auto-dark--is-dark-mode-applescript))))
+    (condition-case err
+        (string-equal "true"
+                      (mac-do-applescript auto-dark--is-dark-mode-applescript))
+      (error
+       (auto-dark--handle-system-events-access '("AppleScript error 1") err)))))
 
 (defun auto-dark--is-dark-mode-osascript ()
   "Invoke AppleScript using Emacs using external shell command;

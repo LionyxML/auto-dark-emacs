@@ -126,8 +126,9 @@ by going to:
 
 
 ```
-Settings -> Privacy & Security -> Emacs -> System Events
+System Settings -> Privacy & Security -> Automation -> Emacs -> System Events
 ```
+![](https://github.com/user-attachments/assets/dd45a58f-b417-4255-8339-af7221ba8790)
 
 
 Also notice if you run emacs from  the terminal, `Osascript` is the only method that
