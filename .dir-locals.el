@@ -3,6 +3,6 @@
 ((nil
   ;; FIXME: This is just set to silence linter line-length warnings. It should
   ;;       be set to an intentional value, then the long-lines fixed.
-  (fill-column . 167)
+  (fill-column . 136)
   (indent-tabs-mode . nil)
   (sentence-end-double-space . nil)))
