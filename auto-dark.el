@@ -248,10 +248,9 @@ This will load themes if necessary."
     (let ((failures (mapcan (lambda (theme)
                               (condition-case nil
                                   ;; Enable instead of load when possible.
-                                  (if (custom-theme-p theme)
-                                      (enable-theme theme)
-                                    (load-theme theme))
-                                (:success nil)
+                                  (ignore (if (custom-theme-p theme)
+                                              (enable-theme theme)
+                                            (load-theme theme)))
                                 (error (list theme))))
                             (reverse full-themes))))
       (when failures
