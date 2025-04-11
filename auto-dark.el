@@ -133,11 +133,9 @@ this is less efficient, but works for non-GUI Emacs."
 
 (defun auto-dark--is-dark-mode-powershell ()
   "Invoke powershell using Emacs using external shell command."
-  (string-equal "0"
-                (string-trim (shell-command-to-string
-                              "powershell -noprofile -noninteractive \
+  (string-equal "0" (string-trim (shell-command-to-string "powershell.exe -noprofile -noninteractive \
 -nologo -ex bypass -command Get-ItemPropertyValue \
-HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize \
+'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize' \
 -Name AppsUseLightTheme"))))
 
 (defun auto-dark--is-dark-mode-winreg ()
@@ -357,6 +355,10 @@ Remove theme change callback registered with D-Bus."
                     (shell-command-to-string "command -v termux-fix-shebang")))
     'termux)
    ((and (eq system-type 'windows-nt)
+         auto-dark-allow-powershell)
+    'powershell)
+   ((and (eq system-type 'gnu/linux)
+         (string-match "-[Mm]icrosoft" operating-system-release)
          auto-dark-allow-powershell)
     'powershell)
    ((eq system-type 'windows-nt)
