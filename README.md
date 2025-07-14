@@ -33,12 +33,12 @@
   <tr>
     <td>
       <a href="https://garnix.io/repo/LionyxML/auto-dark-emacs?branch=development">
-        <img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2FLionyxML%2Fauto-dark-emacs%3Fbranch%3Ddevelopment" alt="Garnix Dev build"/>
+      <pre>Dev:  <img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2FLionyxML%2Fauto-dark-emacs%3Fbranch%3Ddevelopment" alt="Garnix Dev build"/></pre>
       </a>
     </td>
     <td>
       <a href="https://garnix.io/repo/LionyxML/auto-dark-emacs">
-        <img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2FLionyxML%2Fauto-dark-emacs" alt="Garnix Master build"/>
+      <pre>Prod: <img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2FLionyxML%2Fauto-dark-emacs" alt="Garnix Master build"/></pre>
       </a>
     </td>
   </tr>
