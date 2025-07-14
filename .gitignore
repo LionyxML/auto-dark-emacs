@@ -3,3 +3,4 @@
 /dist
 /.eldev
 /result
+.DS_Store
