@@ -21,9 +21,7 @@
     (it "should not have bound Auto-Dark variables"
       (expect (boundp 'auto-dark-allow-osascript) :to-be nil)
       (expect (boundp 'auto-dark-allow-powershell) :to-be nil)
-      (expect (boundp 'auto-dark-dark-theme) :to-be nil)
       (expect (boundp 'auto-dark-detection-method) :to-be nil)
-      (expect (boundp 'auto-dark-light-theme) :to-be nil)
       (expect (boundp 'auto-dark-polling-interval-seconds) :to-be nil)
       (expect (boundp 'auto-dark-themes) :to-be nil)))
 
@@ -37,24 +35,18 @@
       (expect auto-dark-allow-powershell :to-be nil)
       (expect (boundp 'auto-dark-detection-method) :to-be-truthy)
       (expect auto-dark-polling-interval-seconds :to-be 5)
-      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light)))
-      ;; These two are handled specially – they aren’t set to their defaults
-      ;; until after initialization.
-      (expect (boundp 'auto-dark-dark-theme) :to-be nil)
-      (expect (boundp 'auto-dark-light-theme) :to-be nil)))
+      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light)))))
 
   (describe "after init"
     (before-all
       (auto-dark-initialize-finish))
     (it "themes should be enabled"
       (expect custom-enabled-themes :to-be-in '((tsdh-dark) (tsdh-light))))
-    (it "Old Auto-Dark variables should now be set"
+    (it "should have bound Auto-Dark variables"
       (expect auto-dark-allow-osascript :to-be nil)
       (expect auto-dark-allow-powershell :to-be nil)
       (expect (boundp 'auto-dark-detection-method) :to-be-truthy)
       (expect auto-dark-polling-interval-seconds :to-be 5)
-      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light)))
-      (expect auto-dark-dark-theme :to-be 'wombat)
-      (expect auto-dark-light-theme :to-be 'leuven))))
+      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light)))))))
 
 ;;; customize-first.el ends here

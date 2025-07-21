@@ -26,9 +26,7 @@
     (it "should not have bound Auto-Dark variables"
       (expect (boundp 'auto-dark-allow-osascript) :to-be nil)
       (expect (boundp 'auto-dark-allow-powershell) :to-be nil)
-      (expect (boundp 'auto-dark-dark-theme) :to-be nil)
       (expect (boundp 'auto-dark-detection-method) :to-be nil)
-      (expect (boundp 'auto-dark-light-theme) :to-be nil)
       (expect (boundp 'auto-dark-polling-interval-seconds) :to-be nil)
       (expect (boundp 'auto-dark-themes) :to-be nil)))
 
@@ -40,9 +38,7 @@
     (it "should not have bound Auto-Dark variables"
       (expect (boundp 'auto-dark-allow-osascript) :to-be nil)
       (expect (boundp 'auto-dark-allow-powershell) :to-be nil)
-      (expect (boundp 'auto-dark-dark-theme) :to-be nil)
       (expect (boundp 'auto-dark-detection-method) :to-be nil)
-      (expect (boundp 'auto-dark-light-theme) :to-be nil)
       (expect (boundp 'auto-dark-polling-interval-seconds) :to-be nil)
       (expect (boundp 'auto-dark-themes) :to-be nil)))
 
@@ -56,11 +52,7 @@
       (expect auto-dark-allow-powershell :to-be nil)
       (expect (boundp 'auto-dark-detection-method) :to-be-truthy)
       (expect auto-dark-polling-interval-seconds :to-be 5)
-      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light)))
-      ;; These two are handled specially – they aren’t set to their defaults
-      ;; until after initialization.
-      (expect (boundp 'auto-dark-dark-theme) :to-be nil)
-      (expect (boundp 'auto-dark-light-theme) :to-be nil)))
+      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light)))))
 
   ;; FIXME: Make sure this is always in a particular mode, or check for either set.
   (describe "after-enabling"
@@ -73,10 +65,6 @@
       (expect auto-dark-allow-powershell :to-be nil)
       (expect (boundp 'auto-dark-detection-method) :to-be-truthy)
       (expect auto-dark-polling-interval-seconds :to-be 5)
-      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light)))
-      ;; These two are handled specially – they aren’t set to their defaults
-      ;; until after initialization.
-      (expect (boundp 'auto-dark-dark-theme) :to-be nil)
-      (expect (boundp 'auto-dark-light-theme) :to-be nil))))
+      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light))))))
 
 ;;; early-init.el ends here
