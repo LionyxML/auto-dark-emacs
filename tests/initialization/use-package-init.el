@@ -12,8 +12,6 @@
 ;; To silence “reference to free variable” warnings
 (defvar auto-dark-allow-osascript)
 (defvar auto-dark-allow-powershell)
-(defvar auto-dark-dark-theme)
-(defvar auto-dark-light-theme)
 (defvar auto-dark-polling-interval-seconds)
 (defvar auto-dark-themes)
 
@@ -27,9 +25,7 @@
     (it "should not have bound Auto-Dark variables"
       (expect (boundp 'auto-dark-allow-osascript) :to-be nil)
       (expect (boundp 'auto-dark-allow-powershell) :to-be nil)
-      (expect (boundp 'auto-dark-dark-theme) :to-be nil)
       (expect (boundp 'auto-dark-detection-method) :to-be nil)
-      (expect (boundp 'auto-dark-light-theme) :to-be nil)
       (expect (boundp 'auto-dark-polling-interval-seconds) :to-be nil)
       (expect (boundp 'auto-dark-themes) :to-be nil)))
 
@@ -44,11 +40,7 @@
       (expect auto-dark-allow-powershell :to-be nil)
       (expect (boundp 'auto-dark-detection-method) :to-be-truthy)
       (expect auto-dark-polling-interval-seconds :to-be 5)
-      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light)))
-      ;; These two are handled specially – they aren’t set to their defaults
-      ;; until after initialization.
-      (expect (boundp 'auto-dark-dark-theme) :to-be nil)
-      (expect (boundp 'auto-dark-light-theme) :to-be nil))
+      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light))))
     (it "should have enabled the themes"
       (expect custom-enabled-themes :to-be-in '((tsdh-dark) (tsdh-light))))))
 
