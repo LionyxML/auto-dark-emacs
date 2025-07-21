@@ -38,20 +38,6 @@
   :group 'tools
   :prefix "auto-dark-*")
 
-(defun auto-dark--initialize-after-init (&optional initialize-fn)
-  "Return a function suitable for passing to `defcustom'’s :initialize parameter.
-The returned function defers initialization to `after-init-hook'. INITIALIZE-FN
-is the function that should be used to eventually initialize the symbol. It
-defaults to `custom-initialize-reset', as does :initialize itself."
-  (let ((init-fn (or initialize-fn #'custom-initialize-reset)))
-    (lambda (symbol exp)
-      (if after-init-time
-          (funcall init-fn symbol exp)
-        (add-hook 'after-init-hook (lambda () (funcall init-fn symbol exp)))))))
-
-(make-obsolete-variable 'auto-dark-dark-theme 'auto-dark-themes "0.13")
-(make-obsolete-variable 'auto-dark-light-theme 'auto-dark-themes "0.13")
-
 (defcustom auto-dark-polling-interval-seconds 5
   "The number of seconds between which to poll for dark mode state.
 Emacs must be restarted for this value to take effect."
@@ -207,10 +193,7 @@ It can be dark, light, or nil."
 
 (defun auto-dark--initialized-p ()
   "Check whether initialization is far enough along to change themes."
-  (and (boundp 'auto-dark-themes)
-       (or auto-dark-themes
-           (and (boundp 'auto-dark-dark-theme)
-                (boundp 'auto-dark-light-theme)))))
+  (boundp 'auto-dark-themes))
 
 (defun auto-dark--check-and-set-dark-mode ()
   "Set the theme according to the OS's dark mode state.
@@ -399,38 +382,6 @@ modes."))))
         (auto-dark--register-change-listener))
     (auto-dark--unregister-change-listener)))
 
-(defun auto-dark--set-individual-theme-var (symbol theme)
-  "Pre-load THEME and assign it to SYMBOL.
-This also updates Auto-Dark’s state as necessary."
-  ;; Pre-load this theme (to force prompts for ‘custom-safe-themes’ while
-  ;; the user is interacting with Auto Dark, rather than at
-  ;; initialization or ‘frame-background-mode’ charge).
-  (when (and theme (not (custom-theme-p theme)))
-    (load-theme theme nil t))
-  (set-default symbol theme)
-  (when auto-dark-mode
-    ;; Make sure Auto Dark is showing the updated themes for the current
-    ;; ‘frame-background-mode’.
-    (auto-dark--check-and-set-dark-mode)))
-
-(defcustom auto-dark-dark-theme 'wombat
-  "The theme to enable when dark-mode is active.
-
-This variable is obsolete. You should set `auto-dark-themes' instead."
-  :group 'auto-dark
-  :type '(choice symbol (const nil))
-  :initialize (auto-dark--initialize-after-init)
-  :set #'auto-dark--set-individual-theme-var)
-
-(defcustom auto-dark-light-theme 'leuven
-  "The theme to enable when dark-mode is inactive.
-
-This variable is obsolete. You should set `auto-dark-themes' instead."
-  :group 'auto-dark
-  :type '(choice symbol (const nil))
-  :initialize (auto-dark--initialize-after-init)
-  :set #'auto-dark--set-individual-theme-var)
-
 ;; Dark & light themes need to be set together because enabling and disabling
 ;; themes modifies `custom-enabled-themes', so if only one mode were expected to
 ;; default to `custom-enabled-themes', it would use the wrong list of themes
@@ -479,20 +430,9 @@ to t."
 MODE should be light or dark. If none of the Auto-Dark theme variables are set,
 this returns nil, which means that `custom-enabled-themes' will be used as the
 theme list."
-  (let ((patched-themes (or auto-dark-themes
-                            (if (and custom-enabled-themes
-                                     (not (equal custom-enabled-themes
-                                                 (list auto-dark-dark-theme)))
-                                     (not (equal custom-enabled-themes
-                                                 (list auto-dark-light-theme))))
-                                '(() ())
-                              (list (list auto-dark-dark-theme)
-                                    (list auto-dark-light-theme))))))
-    ;; TODO: Once `auto-dark-dark-theme' and `auto-dark-light-theme' are
-    ;;       removed, the function can be reduced to this form.
-    (pcase mode
-      ('dark (car patched-themes))
-      ('light (cadr patched-themes)))))
+  (pcase mode
+    ('dark (car auto-dark-themes))
+    ('light (cadr auto-dark-themes))))
 
 (provide 'auto-dark)
 ;;; auto-dark.el ends here
