@@ -121,27 +121,40 @@ built-in theme loading logic.
 
 ### Doom Emacs
 
-If you're under Doom Emacs, the following configuration should be
-enough[^1]:
-
-[^1]: There is possibly an issue with Doom Emacs’ initialization, where the
-“Loading a theme can run Lisp code. Really load?” prompt can cause
-initialization to fail. Auto-Dark attempts to ensure that this prompt doesn’t
-occur during initialization, but it isn’t perfect. If this causes a problem for
-you, try setting `custom-safe-themes` to `t` in your config before setting
-`auto-dark-themes`. But be aware that this is a potential security concern. See
-the documentation of `custom-safe-themes` for more details.
-
+If you use Doom Emacs, load the package in your `packages.el`:
 ```emacs-lisp
 ;; In your packages.el
 (package! auto-dark)
+```
 
-;; In your config.el
-
-(after! doom-ui
-  ;; set your favorite themes
-  (setq! auto-dark-themes '((doom-one) (doom-one-light)))
-  (auto-dark-mode))
+And put the following snippet in your `config.el`:
+```emacs-lisp
+(use-package! auto-dark
+  :defer t
+  :init
+  ;; Configure themes
+  (setq! auto-dark-themes '((doom-solarized-dark) (doom-solarized-light)))
+  ;; Disable doom's theme loading mechanism (just to make sure)
+  (setq! doom-theme nil)
+  ;; Declare that all themes are safe to load.
+  ;; Be aware that setting this variable may have security implications if you
+  ;; get tricked into loading untrusted themes (via auto-dark-mode or manually).
+  ;; See the documentation of custom-safe-themes for details.
+  (setq! custom-safe-themes t)
+  ;; Enable auto-dark-mode at the right point in time.
+  ;; This is inspired by doom-ui.el. Using server-after-make-frame-hook avoids
+  ;; issues with an early start of the emacs daemon using systemd, which causes
+  ;; problems with the DBus connection that auto-dark mode relies upon.
+  (defun my-auto-dark-init-h ()
+    (auto-dark-mode)
+    (remove-hook 'server-after-make-frame-hook #'my-auto-dark-init-h)
+    (remove-hook 'after-init-hook #'my-auto-dark-init-h))
+  (let ((hook (if (daemonp)
+                  'server-after-make-frame-hook
+                'after-init-hook)))
+    ;; Depth -95 puts this before doom-init-theme-h, which sounds like a good
+    ;; idea, if only for performance reasons.
+    (add-hook hook #'my-auto-dark-init-h -95)))
 ```
 
 
