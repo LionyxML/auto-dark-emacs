@@ -128,9 +128,8 @@ this is less efficient, but works for non-GUI Emacs."
                   "/org/freedesktop/portal/desktop"
                   "org.freedesktop.portal.Settings" "Read"
                   "org.freedesktop.appearance" "color-scheme")))
-    (0 nil)
     (1 'dark)
-    (2 'light)))
+    ((or 0 2) 'light)))
 
 (defun auto-dark--is-dark-mode-powershell ()
   "Invoke powershell using Emacs using external shell command."
