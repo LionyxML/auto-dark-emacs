@@ -1,0 +1,30 @@
+;;; Eldev --- Build configuration -*- mode: emacs-lisp; lexical-binding: t; -*-
+
+(require 'eldev)
+(require 'elisp-lint)
+
+(define-error 'auto-dark-test-invalid-test-selection "Unknown test type")
+
+(eldev-add-loading-roots 'test "initialize")
+
+(eldev-defoption auto-dark-test-selection (type)
+  "Select tests to run; type can be `main' or `integration'"
+  :options        (-T --test-type)
+  :for-command    test
+  :value          TYPE
+  :default-value  'main
+  (pcase (intern type)
+    ('main
+     (setf eldev-test-fileset
+           `(:and ,eldev-test-fileset (:not "./tests/initialization"))))
+    ('integration (setf eldev-test-fileset "./tests/initialization"))
+    (_ (signal 'auto-dark-test-invalid-test-selection (list type)))))
+
+(setq
+ ;; run all linters by default
+ eldev-lint-default t
+ ;; ignore lisp files in the example directory
+ eldev-standard-excludes `(:or ,eldev-standard-excludes "./example")
+ ;; and disable the ‘elisp-lint’ validators that are already covered by
+ ;; ‘eldev-lint’ (see ‘eldev-linter-elisp’).
+ elisp-lint-ignored-validators '("checkdoc" "package-lint"))

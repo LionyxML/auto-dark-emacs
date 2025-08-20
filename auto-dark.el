@@ -1,4 +1,4 @@
-;;; auto-dark.el --- Automatically sets the dark-mode theme based on macOS/Linux/Windows status -*- lexical-binding: t; -*-
+;;; auto-dark.el --- Automatically set the dark-mode theme based on system status -*- lexical-binding: t; -*-
 
 ;; Author: Rahul M. Juliato
 ;;         Tim Harper <timcharper at gmail dot com>
@@ -6,7 +6,7 @@
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
 ;;         Greg Pfeil <greg@technomadic.org>
 ;; Created: July 16 2019
-;; Version: 0.13.2
+;; Version: 0.13.3
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
@@ -37,66 +37,6 @@
   "Automatically changes Emacs theme acording to MacOS/Windows dark-mode status."
   :group 'tools
   :prefix "auto-dark-*")
-
-;; Dark & light themes need to be set together because enabling and disabling
-;; themes modifies `custom-enabled-themes', so if only one mode were expected to
-;; default to `custom-enabled-themes', it would use the wrong list of themes
-;; after the first time the other mode enables its themes.
-(defcustom auto-dark-themes nil
-  "The themes to enable for dark and light modes.
-The default is to use the themes in `custom-enabled-themes', but that only works
-if the themes are aware of `frame-background-mode', which many aren’t.
-
-If your themes aren’t aware of `frame-background-mode' (or you just prefer
-different themes for dark and light modes), you can set explicit lists of themes
-for each mode. Like with `custom-enabled-themes', the earlier themes in the list
-have higher precedence."
-  :group 'auto-dark
-  :type '(choice
-          (const :tag "Use custom-enabled-themes" nil)
-          (list :tag "Use distinct dark & light lists"
-                (repeat :tag "Dark" symbol)
-                (repeat :tag "Light" symbol))))
-
-(defcustom auto-dark-dark-theme 'wombat
-  "The theme to enable when dark-mode is active.
-
-This variable is obsolete. You should set `auto-dark-themes' instead."
-  :group 'auto-dark
-  :type '(choice symbol (const nil)))
-
-(defcustom auto-dark-light-theme 'leuven
-  "The theme to enable when dark-mode is inactive.
-
-This variable is obsolete. You should set `auto-dark-themes' instead."
-  :group 'auto-dark
-  :type '(choice symbol (const nil)))
-
-(make-obsolete-variable 'auto-dark-dark-theme 'auto-dark-themes "0.13")
-(make-obsolete-variable 'auto-dark-light-theme 'auto-dark-themes "0.13")
-
-(defun auto-dark--patch-theme-list (themes deprecated-theme)
-  "Support the deprecated ‘auto-dark-*-theme’ variables.
-If THEMES is non-nil, it’s simply returned. If ‘custom-enabled-themes’ isn’t
-set, a list containing only DEPRECATED-THEME is returned, otherwise nil.
-
-Once the deprecated variables are removed “(auto-dark--patch-theme-list a b)”
-can be replaced by “a”."
-  (or themes
-      (unless (and custom-enabled-themes
-                   (not (equal custom-enabled-themes
-                               (list auto-dark-dark-theme)))
-                   (not (equal custom-enabled-themes
-                               (list auto-dark-light-theme))))
-        (when deprecated-theme (list deprecated-theme)))))
-
-(defun auto-dark--dark-themes ()
-  "Return the set of themes to be used in dark mode."
-  (auto-dark--patch-theme-list (car auto-dark-themes) auto-dark-dark-theme))
-
-(defun auto-dark--light-themes ()
-  "Return the set of themes to be used in light mode."
-  (auto-dark--patch-theme-list (cadr auto-dark-themes) auto-dark-light-theme))
 
 (defcustom auto-dark-polling-interval-seconds 5
   "The number of seconds between which to poll for dark mode state.
@@ -131,18 +71,21 @@ doing!"
 
 (defvar auto-dark--dbus-listener-object nil)
 
-(defun auto-dark--is-dark-mode-applescript ()
+(defun auto-dark--current-mode-applescript ()
   "Invoke AppleScript using Emacs built-in AppleScript support.
 In order to check if dark mode is enabled.  Return true if it is."
   (if (fboundp 'ns-do-applescript)
-      (auto-dark--is-dark-mode-ns)
+      (if (auto-dark--is-dark-mode-ns) 'dark 'light)
     (if (fboundp 'mac-do-applescript)
-        (auto-dark--is-dark-mode-mac)
+        (if (auto-dark--is-dark-mode-mac) 'dark 'light)
       (error "No AppleScript support available in this Emacs build.  Try setting `auto-dark-allow-osascript` to t"))))
 
 (defun auto-dark--is-dark-mode-ns ()
-  "Check if dark mode is enabled using ns-do-applescript."
-  (string-equal "true" (ns-do-applescript "tell application \"System Events\"
+  "Check if dark mode is enabled using `ns-do-applescript'."
+  ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
+  ;;        setting the detection method.
+  (when (fboundp 'ns-do-applescript)
+    (string-equal "true" (ns-do-applescript "tell application \"System Events\"
         tell appearance preferences
                 if (dark mode) then
                         return \"true\"
@@ -150,11 +93,15 @@ In order to check if dark mode is enabled.  Return true if it is."
                         return \"false\"
                 end if
         end tell
-end tell")))
+end tell"))))
 
 (defun auto-dark--is-dark-mode-mac ()
   "Check if dark mode is enabled using `mac-do-applescript'."
-  (string-equal "\"true\"" (mac-do-applescript "tell application \"System Events\"
+  ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
+  ;;        setting the detection method.
+  (when (fboundp 'mac-do-applescript)
+    (string-equal "\"true\""
+                  (mac-do-applescript "tell application \"System Events\"
         tell appearance preferences
                 if (dark mode) then
                         return \"true\"
@@ -162,27 +109,34 @@ end tell")))
                         return \"false\"
                 end if
         end tell
-end tell")))
+end tell"))))
 
 
 (defun auto-dark--is-dark-mode-osascript ()
   "Invoke applescript using Emacs using external shell command;
 this is less efficient, but works for non-GUI Emacs."
-  (string-equal "true" (string-trim (shell-command-to-string "osascript -e 'tell application \"System Events\" to tell appearance preferences to return dark mode'"))))
+  (string-equal "true"
+                (string-trim (shell-command-to-string
+                              "osascript -e 'tell application \"System Events\" to tell appearance preferences to return dark mode'"))))
 
-(defun auto-dark--is-dark-mode-dbus ()
+(defun auto-dark--current-mode-dbus ()
   "Use Emacs built-in D-Bus function to determine if dark theme is enabled."
-  (eq 1 (caar (dbus-ignore-errors
-                (dbus-call-method
-                 :session
-                 "org.freedesktop.portal.Desktop"
-                 "/org/freedesktop/portal/desktop"
-                 "org.freedesktop.portal.Settings" "Read"
-                 "org.freedesktop.appearance" "color-scheme")))))
+  (pcase (caar (dbus-ignore-errors
+                 (dbus-call-method
+                  :session
+                  "org.freedesktop.portal.Desktop"
+                  "/org/freedesktop/portal/desktop"
+                  "org.freedesktop.portal.Settings" "Read"
+                  "org.freedesktop.appearance" "color-scheme")))
+    (0 nil)
+    (1 'dark)
+    (2 'light)))
 
 (defun auto-dark--is-dark-mode-powershell ()
   "Invoke powershell using Emacs using external shell command."
-  (string-equal "0" (string-trim (shell-command-to-string "powershell.exe -noprofile -noninteractive \
+  (string-equal "0"
+                (string-trim (shell-command-to-string
+                              "powershell.exe -noprofile -noninteractive \
 -nologo -ex bypass -command Get-ItemPropertyValue \
 'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize' \
 -Name AppsUseLightTheme"))))
@@ -190,14 +144,21 @@ this is less efficient, but works for non-GUI Emacs."
 (defun auto-dark--is-dark-mode-winreg ()
   "Use Emacs built-in Windows Registry function.
 In order to determine if dark theme is enabled."
-  (eq 0 (w32-read-registry 'HKCU
-			   "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
-			   "AppsUseLightTheme")))
+  ;; FIXME: We shouldn’t need to check `fboundp' on every call, just when
+  ;;        setting the detection method.
+  (when (fboundp 'w32-read-registry)
+    (eq 0
+        (w32-read-registry
+         'HKCU
+         "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
+         "AppsUseLightTheme"))))
 
 (defun auto-dark--is-dark-mode-termux ()
-  "Use Termux way to determine if dark theme is enabled.  ref: https://github.com/termux/termux-api/issues/425."
+  "Use Termux way to determine if dark theme is enabled.
+ref: https://github.com/termux/termux-api/issues/425."
   (string-equal "Night mode: yes"
-                (shell-command-to-string "echo -n $(cmd uimode night 2>&1 </dev/null)")))
+                (shell-command-to-string
+                 "echo -n $(cmd uimode night 2>&1 </dev/null)")))
 
 (defvar auto-dark-dark-mode-hook nil
   "List of hooks to run after dark mode is loaded." )
@@ -205,29 +166,47 @@ In order to determine if dark theme is enabled."
 (defvar auto-dark-light-mode-hook nil
   "List of hooks to run after light mode is loaded." )
 
-(defun auto-dark--is-dark-mode ()
-  "If dark mode is enabled."
-  (pcase auto-dark-detection-method
-    ('applescript
-     (auto-dark--is-dark-mode-applescript))
-    ('osascript
-     (auto-dark--is-dark-mode-osascript))
-    ('dbus
-     (auto-dark--is-dark-mode-dbus))
-    ('powershell
-     (auto-dark--is-dark-mode-powershell))
-    ('winreg
-     (auto-dark--is-dark-mode-winreg))
-    ('termux
-     (auto-dark--is-dark-mode-termux))))
+(defun auto-dark--current-system-mode ()
+  "Return our best guess of the mode the system is in.
+It can be dark, light, or nil."
+  (or (pcase auto-dark-detection-method
+        ('applescript
+         (auto-dark--current-mode-applescript))
+        ('osascript
+         (if (auto-dark--is-dark-mode-osascript) 'dark 'light))
+        ('dbus
+         (auto-dark--current-mode-dbus))
+        ('powershell
+         (if (auto-dark--is-dark-mode-powershell) 'dark 'light))
+        ('winreg
+         (if (auto-dark--is-dark-mode-winreg) 'dark 'light))
+        ('termux
+         (if (auto-dark--is-dark-mode-termux) 'dark 'light)))
+      (frame-parameter nil 'background-mode)
+      ;; Let Emacs guess what the background should be.
+      (frame-terminal-default-bg-mode nil)
+      ;; Give up and just use the value we last set
+      auto-dark--last-dark-mode-state
+      (lwarn 'auto-dark
+             :warning
+             "couldn’t determine current system appearance")))
+
+(defun auto-dark--initialized-p ()
+  "Check whether initialization is far enough along to change themes."
+  (boundp 'auto-dark-themes))
 
 (defun auto-dark--check-and-set-dark-mode ()
   "Set the theme according to the OS's dark mode state.
 In order to prevent flickering, we only set the theme if we haven't
 already set the theme for the current dark mode state."
-  (let ((appearance (if (auto-dark--is-dark-mode) 'dark 'light)))
-    (unless (eq appearance auto-dark--last-dark-mode-state)
-      (auto-dark--set-theme appearance))))
+  ;; This can be called during custom variable initialization, so ensure we only
+  ;; do it once we’re certain initialization is far enough along.
+  (when (auto-dark--initialized-p)
+    (let ((appearance (auto-dark--current-system-mode)))
+      (unless (and (eq appearance auto-dark--last-dark-mode-state)
+                   (equal custom-enabled-themes
+                          (auto-dark--themes-for-mode appearance)))
+        (auto-dark--set-theme appearance)))))
 
 (defun auto-dark--update-frame-backgrounds (appearance)
   "Set the `frame-background-mode' for all frames to APPEARANCE."
@@ -248,33 +227,47 @@ This will load themes if necessary."
     (let ((failures (mapcan (lambda (theme)
                               (condition-case nil
                                   ;; Enable instead of load when possible.
-                                  (if (custom-theme-p theme)
-                                      (enable-theme theme)
-                                    (load-theme theme))
-                                (:success nil)
+                                  (ignore (if (custom-theme-p theme)
+                                              (enable-theme theme)
+                                            (load-theme theme)))
                                 (error (list theme))))
                             (reverse full-themes))))
       (when failures
         (warn "Failed to enable theme(s): %s"
               (mapconcat #'symbol-name failures ", "))))))
 
+(defun auto-dark-toggle-appearance ()
+  "Switch between light and dark mode.
+If `auto-dark-detection-method' is nil, this will persist until the next time
+this is called. Otherwise, it could switch to the system appearance at any
+time."
+  (interactive)
+  (auto-dark--set-theme (if (eq auto-dark--last-dark-mode-state 'dark)
+                            'light
+                          ;; NB: This does _something_ even if we don’t know
+                          ;;     what the previous state was, since the user
+                          ;;     explicitly requested a change.
+                          'dark)))
+
 (defun auto-dark--set-theme (appearance)
   "Set light/dark theme Argument APPEARANCE should be light or dark."
-  (setq auto-dark--last-dark-mode-state appearance)
-  (auto-dark--update-frame-backgrounds appearance)
-  (pcase appearance
-    ('dark
-     (auto-dark--enable-themes (auto-dark--dark-themes))
-     (run-hooks 'auto-dark-dark-mode-hook))
-    ('light
-     (auto-dark--enable-themes (auto-dark--light-themes))
-     (run-hooks 'auto-dark-light-mode-hook))))
+  ;; This can be called during custom variable initialization, so ensure we only
+  ;; do it once we’re certain initialization is far enough along.
+  (when (auto-dark--initialized-p)
+    (setq auto-dark--last-dark-mode-state appearance)
+    (auto-dark--update-frame-backgrounds appearance)
+    (auto-dark--enable-themes (auto-dark--themes-for-mode appearance))
+    (run-hooks (pcase appearance
+                 ('dark 'auto-dark-dark-mode-hook)
+                 ('light 'auto-dark-light-mode-hook)))))
 
 (defvar auto-dark--timer nil)
 (defun auto-dark-start-timer ()
   "Start auto-dark timer."
   (setq auto-dark--timer
-        (run-with-timer 0 auto-dark-polling-interval-seconds #'auto-dark--check-and-set-dark-mode)))
+        (run-with-timer 0
+                        auto-dark-polling-interval-seconds
+                        #'auto-dark--check-and-set-dark-mode)))
 
 (defun auto-dark-stop-timer ()
   "Stop auto-dark timer."
@@ -286,6 +279,8 @@ This will load themes if necessary."
 Ask D-Bus to send us a signal on theme change and add a callback
 to change the theme."
   (setq auto-dark--dbus-listener-object
+        ;; Documented at
+        ;; https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Settings.html
         (dbus-register-signal
          :session
          "org.freedesktop.portal.Desktop"
@@ -295,7 +290,9 @@ to change the theme."
          (lambda (path var val)
            (when (and (string= path "org.freedesktop.appearance")
                       (string= var "color-scheme"))
-             (auto-dark--set-theme (pcase (car val) (0 'light) (1 'dark) (2 'light))))))))
+             (pcase (car val)
+               (1 (auto-dark--set-theme 'dark))
+               ((or 0 2) (auto-dark--set-theme 'light))))))))
 
 (defun auto-dark--unregister-dbus-listener ()
   "Unregister our callback function with D-Bus.
@@ -308,7 +305,8 @@ Remove theme change callback registered with D-Bus."
    ((auto-dark--use-ns-system-appearance)
     (add-hook 'ns-system-appearance-change-functions #'auto-dark--set-theme))
    ((auto-dark--use-mac-system-appearance)
-    (add-hook 'mac-effective-appearance-change-hook #'auto-dark--check-and-set-dark-mode))
+    (add-hook 'mac-effective-appearance-change-hook
+              #'auto-dark--check-and-set-dark-mode))
    ((auto-dark--use-dbus)
     (auto-dark--register-dbus-listener))
    (t (auto-dark-start-timer))))
@@ -319,7 +317,8 @@ Remove theme change callback registered with D-Bus."
    ((auto-dark--use-ns-system-appearance)
     (remove-hook 'ns-system-appearance-change-functions #'auto-dark--set-theme))
    ((auto-dark--use-mac-system-appearance)
-    (remove-hook 'mac-effective-appearance-change-hook #'auto-dark--check-and-set-dark-mode))
+    (remove-hook 'mac-effective-appearance-change-hook
+                 #'auto-dark--check-and-set-dark-mode))
    ((auto-dark--use-dbus)
     (auto-dark--unregister-dbus-listener))
    (t (auto-dark-stop-timer))))
@@ -342,8 +341,8 @@ Remove theme change callback registered with D-Bus."
    ((and (eq system-type 'darwin)
          (or (fboundp 'ns-do-applescript)
              (fboundp 'mac-do-applescript))
-		 (or (eq window-system 'ns)
-			 (eq window-system 'mac)))
+         (or (eq window-system 'ns)
+             (eq window-system 'mac)))
     'applescript)
    ((and (eq system-type 'darwin)
          auto-dark-allow-osascript)
@@ -368,7 +367,9 @@ Remove theme change callback registered with D-Bus."
    ((eq system-type 'windows-nt)
     'winreg)
    (t
-    (error "Could not determine a viable theme detection mechanism!"))))
+    (lwarn 'auto-dark :error "Could not determine a viable theme detection \
+mechanism! You can use ‘auto-dark-toggle-appearance’ to manually switch between \
+modes."))))
 
 ;;;###autoload
 (define-minor-mode auto-dark-mode
@@ -379,11 +380,63 @@ Remove theme change callback registered with D-Bus."
   (if auto-dark-mode
       (progn
         (unless auto-dark-detection-method
-          (setq auto-dark-detection-method (auto-dark--determine-detection-method)))
+          (setq auto-dark-detection-method
+                (auto-dark--determine-detection-method)))
         (auto-dark--check-and-set-dark-mode)
         (auto-dark--register-change-listener))
     (auto-dark--unregister-change-listener)))
 
-(provide 'auto-dark)
+;; Dark & light themes need to be set together because enabling and disabling
+;; themes modifies `custom-enabled-themes', so if only one mode were expected to
+;; default to `custom-enabled-themes', it would use the wrong list of themes
+;; after the first time the other mode enables its themes.
+(defcustom auto-dark-themes nil
+  "The themes to enable for dark and light modes.
+The default is to use the themes in `custom-enabled-themes', but that only works
+if the themes are aware of `frame-background-mode', which many aren’t.
 
+If your themes aren’t aware of `frame-background-mode' (or you just prefer
+different themes for dark and light modes), you can set explicit lists of themes
+for each mode. Like with `custom-enabled-themes', the earlier themes in the list
+have higher precedence.
+
+One other thing to be aware of is that when you first load a theme, you may be
+prompted to acknowledge that the theme can run arbitrary Lisp code.
+Acknowledging this and then allowing Emacs to treat the theme as safe in future
+sessions will silence the prompt (for that particular theme). If you would just
+prefer to ignore this warning for all themes, you can set `custom-safe-themes'
+to t."
+  :group 'auto-dark
+  :type '(choice
+          (const :tag "Use custom-enabled-themes" nil)
+          (list :tag "Use distinct dark & light lists"
+                (repeat :tag "Dark" symbol)
+                (repeat :tag "Light" symbol)))
+  :set (lambda (symbol value)
+         ;; Pre-load any themes used by Auto Dark (to force prompts for
+         ;; ‘custom-safe-themes’ while the user is interacting with Auto Dark,
+         ;; rather than at initialization or ‘frame-background-mode’ charge).
+         (mapc (lambda (mode-themes)
+                 (mapc (lambda (theme)
+                         (unless (custom-theme-p theme)
+                           (load-theme theme nil t)))
+                       mode-themes))
+               value)
+         (set-default symbol value)
+         (when auto-dark-mode
+           ;; Make sure Auto Dark is showing the updated themes for the current
+           ;; ‘frame-background-mode’.
+           (auto-dark--check-and-set-dark-mode)))
+  :version "0.13")
+
+(defun auto-dark--themes-for-mode (mode)
+  "Return the set of themes to be used in MODE.
+MODE should be light or dark. If none of the Auto-Dark theme variables are set,
+this returns nil, which means that `custom-enabled-themes' will be used as the
+theme list."
+  (pcase mode
+    ('dark (car auto-dark-themes))
+    ('light (cadr auto-dark-themes))))
+
+(provide 'auto-dark)
 ;;; auto-dark.el ends here

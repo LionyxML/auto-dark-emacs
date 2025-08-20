@@ -1,12 +1,62 @@
 # Auto-Dark for Emacs
 
+<p align="center">
+  <img src="images/auto-dark-logo.png" alt="Auto-Dark Project Logo" width="300"/>
+</p>
 
-[![MELPA](https://melpa.org/packages/auto-dark-badge.svg)](https://melpa.org/#/auto-dark)
-[![MELPA Stable](https://stable.melpa.org/packages/auto-dark-badge.svg)](https://stable.melpa.org/#/auto-dark)
+<table align="center">
+  <tr>
+    <td>
+      <a href="https://www.gnu.org/software/emacs/emacs.html">
+        <img src="https://img.shields.io/badge/GNU-Emacs-green.svg" alt="Emacs"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
+        <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="GPLv3 License"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://melpa.org/#/auto-dark">
+        <img src="https://melpa.org/packages/auto-dark-badge.svg" alt="MELPA badge"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://stable.melpa.org/#/auto-dark">
+        <img src="https://stable.melpa.org/packages/auto-dark-badge.svg" alt="MELPA Stable badge"/>
+      </a>
+    </td>
+  </tr>
+</table>
 
-Do you want Emacs to follow your MacOS/Linux/Windows/Android dark-mode on/off
-options?
+<table align="center">
+  <tr>
+    <td>
+      <h5>Dev: <a href="https://garnix.io/repo/LionyxML/auto-dark-emacs?branch=development">
+      <img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2FLionyxML%2Fauto-dark-emacs%3Fbranch%3Ddevelopment" alt="Garnix Dev build"/>
+      </a>
+      </h5>
+    </td>
+    <td>
+      <h5>Prod: <a href="https://garnix.io/repo/LionyxML/auto-dark-emacs">
+      <img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2FLionyxML%2Fauto-dark-emacs" alt="Garnix Master build"/>
+      </a>
+      </h5>
+    </td>
+  </tr>
+</table>
 
+<p align="center">
+  Want Emacs to automatically follow your system’s dark mode on macOS, Linux, Windows, or even Android?
+</p>
+
+<p align="center">
+  <a href="#installation"><strong>Installation</strong></a> ·
+  <a href="#settings"><strong>Settings</strong></a> ·
+  <a href="#screenshots"><strong>Screenshots</strong></a>
+</p>
+
+<hr />
 
 This package, `auto-dark-mode`, introduces a minor mode in Emacs that
 enables automatic switching between two user-defined (customizable)
