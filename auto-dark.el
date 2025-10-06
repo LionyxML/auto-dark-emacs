@@ -119,6 +119,11 @@ this is less efficient, but works for non-GUI Emacs."
                 (string-trim (shell-command-to-string
                               "osascript -e 'tell application \"System Events\" to tell appearance preferences to return dark mode'"))))
 
+(defun auto-dark--is-dark-mode-gsettings ()
+  "Check if dark mode is enabled using gsettings."
+  (string-match-p "'prefer-dark'"
+                (shell-command-to-string "gsettings get org.gnome.desktop.interface color-scheme")))
+
 (defun auto-dark--current-mode-dbus ()
   "Use Emacs built-in D-Bus function to determine if dark theme is enabled."
   (pcase (caar (dbus-ignore-errors
@@ -178,6 +183,8 @@ ref: https://github.com/termux/termux-api/issues/425."
   "Return our best guess of the mode the system is in.
 It can be dark, light, or nil."
   (or (pcase auto-dark-detection-method
+        ('gsettings
+         (if (auto-dark--is-dark-mode-gsettings) 'dark 'light))
         ('applescript
          (auto-dark--current-mode-applescript))
         ('osascript
@@ -355,6 +362,9 @@ Remove theme change callback registered with D-Bus."
    ((and (eq system-type 'darwin)
          auto-dark-allow-osascript)
     'osascript)
+   ((and (eq system-type 'gnu/linux)
+         (executable-find "gsettings"))
+    'gsettings)
    ((and (eq system-type 'gnu/linux)
          (member 'dbus features)
          (member "org.freedesktop.portal.Desktop"
