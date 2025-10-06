@@ -6,7 +6,7 @@
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
 ;;         Greg Pfeil <greg@technomadic.org>
 ;; Created: July 16 2019
-;; Version: 0.13.6
+;; Version: 0.13.7
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
@@ -132,11 +132,22 @@ this is less efficient, but works for non-GUI Emacs."
     ((or 0 2) 'light)))
 
 (defun auto-dark--is-dark-mode-powershell ()
-  "Invoke powershell using Emacs using external shell command."
-  (string-equal "0" (string-trim (shell-command-to-string "powershell.exe -noprofile -noninteractive \
--nologo -ex bypass -command Get-ItemPropertyValue \
-'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize' \
--Name AppsUseLightTheme"))))
+  "Invoke PowerShell and detect dark mode.
+Compatible with both bash pure output and zsh mixed output."
+  (let* ((raw-output
+          (shell-command-to-string
+           "powershell.exe -noprofile -noninteractive -nologo -ex bypass -command \
+Get-ItemPropertyValue 'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize' \
+-Name AppsUseLightTheme"))
+         (lines (split-string raw-output "\n" t))
+         (numeric-result
+          (catch 'found
+            (dolist (line lines)
+              (let ((trimmed (string-trim line)))
+                (when (string-match-p "^[0-9]+$" trimmed)
+                  (throw 'found trimmed))))
+            nil)))
+    (and numeric-result (string-equal "0" numeric-result))))
 
 (defun auto-dark--is-dark-mode-winreg ()
   "Use Emacs built-in Windows Registry function.
