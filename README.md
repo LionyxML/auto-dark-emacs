@@ -172,7 +172,13 @@ If by any chance it does not prompt you, you can check permissions on MacOS
 by going to:
 
 ```
-Settings -> Privacy & Security -> Emacs -> System Events
+System Settings → Privacy & Security → Automation
+```
+
+If Emacs doesn't appear in the list of applications under Automation, run this command within Emacs to trigger the permission prompt:
+
+```emacs-lisp
+(shell-command "osascript -e 'tell application \"System Events\" to tell appearance preferences to get dark mode'")
 ```
 
 Also notice if you run emacs from the terminal, `Osascript` is the only method that
