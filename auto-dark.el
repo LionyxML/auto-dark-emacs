@@ -6,7 +6,7 @@
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
 ;;         Greg Pfeil <greg@technomadic.org>
 ;; Created: July 16 2019
-;; Version: 0.13.7
+;; Version: 0.13.8
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
