@@ -369,7 +369,8 @@ Remove theme change callback registered with D-Bus."
          auto-dark-allow-powershell)
     'powershell)
    ((and (eq system-type 'gnu/linux)
-         (string-match "-[Mm]icrosoft" operating-system-release)
+         (string-match "-[Mm]icrosoft"
+                       (string-trim (shell-command-to-string "uname -r")))
          auto-dark-allow-powershell)
     'powershell)
    ((eq system-type 'windows-nt)
