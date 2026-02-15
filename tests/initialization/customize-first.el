@@ -47,6 +47,6 @@
       (expect auto-dark-allow-powershell :to-be nil)
       (expect (boundp 'auto-dark-detection-method) :to-be-truthy)
       (expect auto-dark-polling-interval-seconds :to-be 5)
-      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light)))))))
+      (expect auto-dark-themes :to-equal '((tsdh-dark) (tsdh-light))))))
 
 ;;; customize-first.el ends here
