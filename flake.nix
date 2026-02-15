@@ -23,7 +23,13 @@
   }: let
     pname = "auto-dark";
 
-    supportedSystems = import systems;
+    ## FIXME: aarch64-darwin is excluded because the pinned nixpkgs has a broken
+    ## Emacs derivation on that platform (libgccjit dylib not found,
+    ## causing SIGABRT). Updating flake inputs to fix this is blocked by
+    ## breaking API changes in bash-strict-mode. @sellout would need to
+    ## update the Nix infrastructure to re-enable it.
+    supportedSystems =
+      builtins.filter (s: s != "aarch64-darwin") (import systems);
   in
     {
       schemas = {
@@ -80,7 +86,7 @@
             }
           ]
           else []) [
-          ## Emacs 28 doesn’t like setting up frames in batch mode, so only test
+          ## Emacs 28 doesn't like setting up frames in batch mode, so only test
           ## on Emacs 29 for now.
           "emacs29"
           "emacs29-gtk3"
