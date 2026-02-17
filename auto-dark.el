@@ -272,6 +272,7 @@ time."
 (defvar auto-dark--timer nil)
 (defun auto-dark-start-timer ()
   "Start auto-dark timer."
+  (auto-dark-stop-timer)
   (setq auto-dark--timer
         (run-with-timer 0
                         auto-dark-polling-interval-seconds
@@ -280,10 +281,7 @@ time."
 (defun auto-dark-stop-timer ()
   "Stop auto-dark timer."
   (when (timerp auto-dark--timer)
-    (cancel-timer auto-dark--timer))
-  (dolist (timer timer-list)
-    (when (eq (timer--function timer) 'auto-dark--check-and-set-dark-mode)
-      (cancel-timer timer))))
+    (cancel-timer auto-dark--timer)))
 
 (defun auto-dark--register-dbus-listener ()
   "Register a callback function with D-Bus.
