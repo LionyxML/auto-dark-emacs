@@ -6,7 +6,7 @@
 ;;         Jonathan Arnett <jonathan.arnett@protonmail.com>
 ;;         Greg Pfeil <greg@technomadic.org>
 ;; Created: July 16 2019
-;; Version: 0.13.9
+;; Version: 0.13.10
 ;; Keywords: macos, windows, linux, themes, tools, faces
 ;; URL: https://github.com/LionyxML/auto-dark-emacs
 ;; Package-Requires: ((emacs "24.4"))
@@ -234,10 +234,31 @@ This will load themes if necessary."
           custom-enabled-themes)
     (let ((failures (mapcan (lambda (theme)
                               (condition-case nil
-                                  ;; Enable instead of load when possible.
-                                  (ignore (if (custom-theme-p theme)
-                                              (enable-theme theme)
-                                            (load-theme theme)))
+                                  ;; We use `enable-theme' instead of
+                                  ;; `load-theme' when possible because:
+                                  ;; 1. `load-theme' prompts about
+                                  ;;    `custom-safe-themes' which would
+                                  ;;    break init or fire on every
+                                  ;;    switch (#64, #82).
+                                  ;; 2. `enable-theme' is faster since it
+                                  ;;    skips re-evaluating the theme file.
+                                  ;; The pre-load in `:set' below handles
+                                  ;; the safety prompt once up front.
+                                  ;;
+                                  ;; However, we check `theme-settings'
+                                  ;; rather than `custom-theme-p' because
+                                  ;; some theme libraries (e.g.
+                                  ;; modus-themes v5) eagerly call
+                                  ;; `custom-declare-theme' at
+                                  ;; `require'-time for all their themes.
+                                  ;; This makes `custom-theme-p' return t
+                                  ;; even though no face specs have been
+                                  ;; computed yet.  `enable-theme' on such
+                                  ;; a theme is a no-op (#96).
+                                  (ignore
+                                   (if (get theme 'theme-settings)
+                                       (enable-theme theme)
+                                     (load-theme theme t)))
                                 (error (list theme))))
                             (reverse full-themes))))
       (when failures
@@ -423,12 +444,20 @@ to t."
                 (repeat :tag "Dark" symbol)
                 (repeat :tag "Light" symbol)))
   :set (lambda (symbol value)
-         ;; Pre-load any themes used by Auto Dark (to force prompts for
-         ;; ‘custom-safe-themes’ while the user is interacting with Auto Dark,
-         ;; rather than at initialization or ‘frame-background-mode’ charge).
+         ;; Pre-load themes so that:
+         ;; 1. `custom-safe-themes’ prompts happen here (during
+         ;;    customization) rather than at init or mode-switch
+         ;;    time (#64, #67, #82).
+         ;; 2. `auto-dark--enable-themes’ can later use the fast
+         ;;    `enable-theme’ path instead of `load-theme’.
+         ;; We check `theme-settings’ instead of `custom-theme-p’
+         ;; because some theme libraries (e.g. modus-themes v5)
+         ;; eagerly declare all their themes at `require’-time
+         ;; without loading them, which would cause this pre-load
+         ;; to be skipped (#96).
          (mapc (lambda (mode-themes)
                  (mapc (lambda (theme)
-                         (unless (custom-theme-p theme)
+                         (unless (get theme 'theme-settings)
                            (load-theme theme nil t)))
                        mode-themes))
                value)
